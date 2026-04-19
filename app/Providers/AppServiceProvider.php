@@ -23,9 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register the tenant-agnostic auth provider so authentication bypasses
         // TenantScope (emails are globally unique — isolation is enforced post-auth).
-        Auth::provider('tenant-agnostic', function (Application $app, array $config) {
-            return new TenantAgnosticUserProvider($app['hash'], $config['model']);
-        });
+        Auth::provider('tenant-agnostic', fn (Application $app, array $config): TenantAgnosticUserProvider => new TenantAgnosticUserProvider($app['hash'], $config['model']));
 
         Gate::policy(User::class, UserPolicy::class);
 

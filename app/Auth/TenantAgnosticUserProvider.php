@@ -22,6 +22,7 @@ class TenantAgnosticUserProvider extends EloquentUserProvider
      * @param  Model|null  $model
      * @return Builder<Model>
      */
+    #[\Override]
     protected function newModelQuery($model = null): Builder
     {
         $instance = $model ?? $this->createModel();

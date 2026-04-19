@@ -7,6 +7,7 @@ use App\Models\Scopes\TenantScope;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use PragmaRX\Google2FA\Google2FA;
@@ -139,7 +140,7 @@ describe('AC-003-03: middleware EnsureRole bloqueia acesso por perfil', function
         $gerente = User::factory()->withRole(Role::Gerente)->create(['tenant_id' => $tenant->id]);
         TenantContext::clear();
 
-        Route::get('/test-gerente', fn () => response('ok'))
+        Route::get('/test-gerente', fn (): ResponseFactory|\Illuminate\Http\Response => response('ok'))
             ->middleware(['auth:sanctum', 'role:gerente']);
 
         $response = $this->actingAs($gerente, 'sanctum')->getJson('/test-gerente');
@@ -153,7 +154,7 @@ describe('AC-003-03: middleware EnsureRole bloqueia acesso por perfil', function
         $tecnico = User::factory()->withRole(Role::Tecnico)->create(['tenant_id' => $tenant->id]);
         TenantContext::clear();
 
-        Route::get('/test-gerente-deny', fn () => response('ok'))
+        Route::get('/test-gerente-deny', fn (): ResponseFactory|\Illuminate\Http\Response => response('ok'))
             ->middleware(['auth:sanctum', 'role:gerente']);
 
         $response = $this->actingAs($tecnico, 'sanctum')->getJson('/test-gerente-deny');
@@ -167,7 +168,7 @@ describe('AC-003-03: middleware EnsureRole bloqueia acesso por perfil', function
         $vendedor = User::factory()->withRole(Role::Vendedor)->create(['tenant_id' => $tenant->id]);
         TenantContext::clear();
 
-        Route::get('/test-multi-role', fn () => response('ok'))
+        Route::get('/test-multi-role', fn (): ResponseFactory|\Illuminate\Http\Response => response('ok'))
             ->middleware(['auth:sanctum', 'role:gerente,vendedor']);
 
         $response = $this->actingAs($vendedor, 'sanctum')->getJson('/test-multi-role');

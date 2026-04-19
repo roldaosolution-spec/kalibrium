@@ -19,6 +19,7 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
     /**
      * @return MorphTo<Model, $this>
      */
+    #[\Override]
     public function tokenable(): MorphTo
     {
         return parent::tokenable()->withoutGlobalScope(TenantScope::class);
