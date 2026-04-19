@@ -4,8 +4,10 @@ use App\Http\Middleware\SetTenantContext;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -33,9 +35,9 @@ describe('SetTenantContext middleware', function (): void {
         // so test the middleware directly to cover the abort(401) branch.
         $middleware = new SetTenantContext;
         $request = Request::create('/api/user', 'GET');
-        $request->setUserResolver(fn () => null);
+        $request->setUserResolver(fn (): null => null);
 
-        expect(fn () => $middleware->handle($request, fn () => response('ok')))
+        expect(fn (): Response => $middleware->handle($request, fn (): ResponseFactory|\Illuminate\Http\Response => response('ok')))
             ->toThrow(HttpException::class);
     });
 
