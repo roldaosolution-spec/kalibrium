@@ -13,15 +13,25 @@ use Symfony\Component\HttpFoundation\Response;
 // models that carry HasTenant — TenantScope will throw RuntimeException without context.
 // If web routes ever need tenant-scoped data, add this middleware to the 'web' group.
 //
+// Sanctum's tokenable morphTo uses App\Models\PersonalAccessToken, which bypasses
+// TenantScope so $request->user('sanctum') is safe to call here.
+//
 // PgBouncer must run in session (not transaction) mode — set_config() persists the GUC
 // for the connection lifetime, which requires a stable connection per request (ADR-0016).
 class SetTenantContext
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        // Resolve user via Sanctum (Bearer token) or the default session guard
+        // (actingAs() in tests). PersonalAccessToken::tokenable() bypasses TenantScope,
+        // so this call is safe before any tenant context is established.
+        $user = $request->user('sanctum') ?? $request->user();
 
-        if ($user === null || $user->tenant_id === null) {
+        if ($user === null) {
+            return $next($request);
+        }
+
+        if ($user->tenant_id === null) {
             abort(401, 'Autenticação necessária com tenant válido.');
         }
 

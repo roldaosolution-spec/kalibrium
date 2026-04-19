@@ -30,12 +30,14 @@ describe('SetTenantContext middleware', function (): void {
             ->assertStatus(401);
     });
 
-    it('[AC-001-02] middleware aborta 401 quando usuário não tem tenant_id', function (): void {
-        // Route-level auth:sanctum runs before SetTenantContext can reject null users,
-        // so test the middleware directly to cover the abort(401) branch.
+    it('[AC-001-02] middleware aborta 401 quando usuário autenticado não tem tenant_id', function (): void {
+        // Simulate an authenticated user whose tenant_id was somehow cleared.
+        // Test the middleware directly to cover the abort(401) branch.
         $middleware = new SetTenantContext;
         $request = Request::create('/api/user', 'GET');
-        $request->setUserResolver(fn (): null => null);
+
+        $userWithoutTenant = User::factory()->make(['tenant_id' => null]);
+        $request->setUserResolver(fn () => $userWithoutTenant);
 
         expect(fn (): Response => $middleware->handle($request, fn (): ResponseFactory|\Illuminate\Http\Response => response('ok')))
             ->toThrow(HttpException::class);
