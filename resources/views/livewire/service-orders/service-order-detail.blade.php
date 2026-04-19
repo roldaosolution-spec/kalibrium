@@ -17,7 +17,8 @@
         <div>
             @foreach ($serviceOrder->status->allowedTransitions() as $nextStatus)
                 <button wire:click="advance('{{ $nextStatus->value }}')"
-                    wire:confirm="Confirmar transição para: {{ $nextStatus->label() }}?">
+                    wire:confirm="Confirmar transição para: {{ $nextStatus->label() }}?"
+                    aria-label="Avançar ordem de serviço para {{ $nextStatus->label() }}">
                     {{ $nextStatus->label() }}
                 </button>
             @endforeach

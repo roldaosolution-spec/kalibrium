@@ -4,7 +4,7 @@
     <form wire:submit="save">
         <div>
             <label for="name">Nome <span aria-label="obrigatório">*</span></label>
-            <input wire:model="name" id="name" type="text" required autofocus autocomplete="organization"
+            <input wire:model="name" id="name" type="text" required autofocus autocomplete="organization" aria-required="true"
                 aria-invalid="@error('name') true @else false @enderror"
                 @error('name') aria-describedby="name-error" @enderror>
             @error('name') <span id="name-error">{{ $message }}</span> @enderror
