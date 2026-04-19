@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Scopes\TenantContext;
+use App\Support\TenantContext;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -225,6 +225,68 @@ describe('AC-002-04: Tenant A não acessa dados do Tenant B', function () {
         $found = User::find($user->id);
 
         expect($found)->not->toBeNull();
+    });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// F4: IDOR — authenticated user cannot access cross-tenant records by direct ID
+// ──────────────────────────────────────────────────────────────────────────────
+
+describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function () {
+    afterEach(fn () => TenantContext::clear());
+
+    it('[F4] usuário do Tenant A não obtém dados do Tenant B via /api/user por ID', function () {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        // Create user in Tenant B (bypass Eloquent scope via direct factory)
+        TenantContext::set($tenantB->id);
+        $userB = User::factory()->create(['tenant_id' => $tenantB->id]);
+        TenantContext::clear();
+
+        // Authenticate as Tenant A user
+        TenantContext::set($tenantA->id);
+        $userA = User::factory()->create(['tenant_id' => $tenantA->id]);
+        TenantContext::clear();
+
+        // User A tries to resolve Tenant B's user — TenantScope must block it
+        TenantContext::set($tenantA->id);
+        $found = User::find($userB->id);
+        TenantContext::clear();
+
+        expect($found)->toBeNull('IDOR: User A não deve acessar User B via User::find($id)');
+    });
+
+    it('[F4] User::where(id) não vaza registro IDOR de outro tenant', function () {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        TenantContext::set($tenantB->id);
+        $userB = User::factory()->create(['tenant_id' => $tenantB->id]);
+
+        TenantContext::set($tenantA->id);
+        $found = User::where('id', $userB->id)->first();
+        TenantContext::clear();
+
+        expect($found)->toBeNull('IDOR: User::where(id) não deve retornar registro de outro tenant');
+    });
+
+    it('[F4] HTTP GET /api/user retorna dados do usuário autenticado, não de outro tenant', function () {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        TenantContext::set($tenantB->id);
+        $userB = User::factory()->create(['tenant_id' => $tenantB->id]);
+
+        TenantContext::set($tenantA->id);
+        $userA = User::factory()->create(['tenant_id' => $tenantA->id]);
+        TenantContext::clear();
+
+        $response = $this->actingAs($userA, 'sanctum')->getJson('/api/user');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('id', $userA->id)
+            ->assertJsonMissing(['id' => $userB->id]);
     });
 });
 

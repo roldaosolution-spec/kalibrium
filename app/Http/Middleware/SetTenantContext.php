@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Scopes\TenantContext;
+use App\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +22,17 @@ class SetTenantContext
 
         TenantContext::set($tenantId);
 
-        // SET (session-level) so RLS policy applies to all subsequent queries in this
-        // connection. SET LOCAL would be scoped to the implicit autocommit transaction
-        // and would be lost before any real query executes.
-        DB::statement('SET app.current_tenant_id = ?', [$tenantId]);
+        // Session-level GUC via set_config so RLS reads it on every query in this
+        // connection. SET LOCAL would reset immediately after the statement in
+        // autocommit mode, effectively bypassing RLS.
+        DB::select('SELECT set_config(?, ?, false)', [TenantContext::GUC_NAME, $tenantId]);
 
-        return $next($request);
+        try {
+            return $next($request);
+        } finally {
+            // Clear GUC + PHP context so a pooled connection never leaks tenant.
+            DB::select('SELECT set_config(?, ?, false)', [TenantContext::GUC_NAME, '']);
+            TenantContext::clear();
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models\Concerns;
 
 use App\Models\Scopes\TenantScope;
 use App\Models\Tenant;
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait HasTenant
@@ -14,7 +15,7 @@ trait HasTenant
 
         static::creating(function (self $model) {
             if (empty($model->tenant_id)) {
-                $tenantId = \App\Models\Scopes\TenantContext::getId();
+                $tenantId = TenantContext::getId();
 
                 if ($tenantId === null) {
                     throw new \RuntimeException(

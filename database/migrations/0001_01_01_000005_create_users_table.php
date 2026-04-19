@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->uuid('tenant_id');
+            $table->uuid('tenant_id')->index();
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
             $table->string('role')->default('user');
             $table->string('name');
