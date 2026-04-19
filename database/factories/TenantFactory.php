@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
+/** Factory for generating Tenant model instances in tests and seeders. */
 class TenantFactory extends Factory
 {
     public function definition(): array

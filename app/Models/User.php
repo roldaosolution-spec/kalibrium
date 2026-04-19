@@ -11,6 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
+/** Tenant-scoped user model. All Eloquent queries are automatically filtered to the current tenant. */
 class User extends Authenticatable implements AuditableContract
 {
     use Auditable, HasApiTokens, HasFactory, HasTenant, Notifiable, SoftDeletes;

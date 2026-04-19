@@ -101,6 +101,7 @@ jobs:
       pgsql:
         image: postgres:18-alpine
         env:
+          # CI only — not for production. Production credentials must use GitHub Secrets.
           POSTGRES_DB: kalibrium_test
           POSTGRES_USER: kalibrium
           POSTGRES_PASSWORD: secret
@@ -150,8 +151,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           SESSION_ENCRYPT: "true"
@@ -164,8 +165,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
 
       - name: Executar testes (Pest) com cobertura
         run: ./vendor/bin/pest --coverage-json=coverage/coverage.json --min=80
@@ -174,8 +175,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           SESSION_DRIVER: array

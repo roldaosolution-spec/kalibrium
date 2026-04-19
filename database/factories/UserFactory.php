@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+/** Factory for generating tenant-scoped User instances in tests and seeders. */
 class UserFactory extends Factory
 {
     protected static ?string $password;

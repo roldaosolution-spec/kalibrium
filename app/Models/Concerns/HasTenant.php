@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/** Adds tenant isolation to an Eloquent model: auto-injects tenant_id on create and applies TenantScope globally. */
 trait HasTenant
 {
     public static function bootHasTenant(): void

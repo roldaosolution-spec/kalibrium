@@ -3,8 +3,12 @@
 namespace App\Support;
 
 /**
- * Request-scoped tenant context for application-layer isolation.
- * Stores the active tenant ID set by SetTenantContext middleware.
+ * Request-scoped in-process tenant context (ADR-0016 Layer 1).
+ *
+ * Holds the active tenant ID for the current PHP request. Set by
+ * SetTenantContext middleware; consumed by TenantScope and HasTenant.
+ * Cleared in the middleware finally block to prevent connection-pool leakage.
+ * GUC_NAME is the PostgreSQL session variable used by the RLS policy (Layer 3).
  */
 class TenantContext
 {

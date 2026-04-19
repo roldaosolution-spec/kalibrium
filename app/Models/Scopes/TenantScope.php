@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use RuntimeException;
 
+/** Eloquent global scope that adds a WHERE tenant_id = ? clause to every query on HasTenant models. */
 class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void

@@ -28,6 +28,7 @@ services:
   pgsql:
     image: postgres:18-alpine
     environment:
+      # Local dev only — not for production. Production must use secrets management.
       POSTGRES_DB: kalibrium
       POSTGRES_USER: kalibrium
       POSTGRES_PASSWORD: secret

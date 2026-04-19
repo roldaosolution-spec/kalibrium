@@ -11,6 +11,12 @@ class TenantSeeder extends Seeder
 {
     public function run(): void
     {
+        // KAL-20 F4: guard against running demo seed data in production.
+        // admin@kalibrium.demo with a known password must never be active in prod.
+        if (app()->isProduction()) {
+            return;
+        }
+
         $tenant = Tenant::factory()->create([
             'name' => 'Kalibrium Demo',
             'slug' => 'kalibrium-demo',

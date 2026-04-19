@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
+// Infrastructure note (KAL-20 F6 / KAL-18 F-DOC-04): this middleware is registered
+// only on the 'api' group (bootstrap/app.php). Web routes must NOT access Eloquent
+// models that carry HasTenant — TenantScope will throw RuntimeException without context.
+// If web routes ever need tenant-scoped data, add this middleware to the 'web' group.
+//
+// PgBouncer must run in session (not transaction) mode — set_config() persists the GUC
+// for the connection lifetime, which requires a stable connection per request (ADR-0016).
 class SetTenantContext
 {
     public function handle(Request $request, Closure $next): Response
