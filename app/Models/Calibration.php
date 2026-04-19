@@ -46,6 +46,7 @@ class Calibration extends Model implements AuditableContract
         ];
     }
 
+    #[\Override]
     protected static function booted(): void
     {
         static::creating(function (self $model): void {

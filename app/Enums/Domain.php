@@ -11,6 +11,7 @@ enum Domain: string
     case Massa = 'massa';
     case Temperatura = 'temperatura';
 
+    /** Human-readable PT-BR label used in UI selects and reports. */
     public function label(): string
     {
         return match ($this) {
@@ -21,6 +22,7 @@ enum Domain: string
         };
     }
 
+    /** @return string[] All backing string values — used for migration enum constraints. */
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

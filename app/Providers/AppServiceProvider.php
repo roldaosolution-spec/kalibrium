@@ -33,7 +33,6 @@ class AppServiceProvider extends ServiceProvider
     #[\Override]
     public function register(): void {}
 
-    #[\Override]
     public function boot(): void
     {
         // Register the tenant-agnostic auth provider so authentication bypasses
