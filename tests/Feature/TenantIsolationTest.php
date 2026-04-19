@@ -5,7 +5,6 @@ use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Slice 001 regression — TenantScope isolation
@@ -139,10 +138,7 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function (): void {
         $tenantB = Tenant::factory()->create();
 
         // Insert Tenant B user directly as superuser (bypasses Eloquent + RLS)
-        $userBId = (string) Str::uuid();
-
         DB::table('users')->insert([
-            'id' => $userBId,
             'tenant_id' => $tenantB->id,
             'name' => 'Usuário Tenant B (raw insert)',
             'email' => 'userb-rls@test.com',
@@ -150,6 +146,8 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function (): void {
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        $userBId = DB::table('users')->where('email', 'userb-rls@test.com')->value('id');
 
         DB::unprepared('GRANT SELECT ON users TO kalibrium_app');
 
