@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\CalibrationStatus;
-use App\Enums\Domain;
 use App\Exceptions\InvalidTransitionException;
 use App\Models\Concerns\AuthorizationHelpers;
 use App\Models\Concerns\GeneratesAnnualSequenceNumber;
 use App\Models\Concerns\HasTenant;
+use Carbon\Carbon;
 use Database\Factories\CalibrationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,8 +25,8 @@ use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
  * @property CalibrationStatus $status
  * @property string|null $executor_id
  * @property string|null $verifier_id
- * @property \Carbon\Carbon|null $started_at
- * @property \Carbon\Carbon|null $completed_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
  */
 class Calibration extends Model implements AuditableContract
 {

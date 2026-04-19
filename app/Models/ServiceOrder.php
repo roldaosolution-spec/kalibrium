@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enums\ServiceOrderMode;
 use App\Enums\ServiceOrderStatus;
-use App\Exceptions\InvalidTransitionException;
 use App\Models\Concerns\AuthorizationHelpers;
 use App\Models\Concerns\GeneratesAnnualSequenceNumber;
 use App\Models\Concerns\HasTenant;

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models\Concerns;
 
-use Illuminate\Database\Eloquent\Builder;
-
 trait GeneratesAnnualSequenceNumber
 {
     protected static function generateAnnualSequenceNumber(string $prefix, string $column, ?string $tenantId = null): string

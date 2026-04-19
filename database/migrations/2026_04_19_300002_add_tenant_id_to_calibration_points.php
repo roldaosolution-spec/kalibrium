@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -25,8 +25,8 @@ return new class extends Migration
             $table->uuid('tenant_id')->nullable(false)->change();
         });
 
-        DB::unprepared("ALTER TABLE calibration_points ENABLE ROW LEVEL SECURITY");
-        DB::unprepared("ALTER TABLE calibration_points FORCE ROW LEVEL SECURITY");
+        DB::unprepared('ALTER TABLE calibration_points ENABLE ROW LEVEL SECURITY');
+        DB::unprepared('ALTER TABLE calibration_points FORCE ROW LEVEL SECURITY');
         DB::unprepared("
             CREATE POLICY tenant_isolation ON calibration_points
             USING (
@@ -44,8 +44,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::unprepared("DROP POLICY IF EXISTS tenant_isolation ON calibration_points");
-        DB::unprepared("ALTER TABLE calibration_points DISABLE ROW LEVEL SECURITY");
+        DB::unprepared('DROP POLICY IF EXISTS tenant_isolation ON calibration_points');
+        DB::unprepared('ALTER TABLE calibration_points DISABLE ROW LEVEL SECURITY');
 
         Schema::table('calibration_points', function (Blueprint $table): void {
             $table->dropForeign(['tenant_id']);

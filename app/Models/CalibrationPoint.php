@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Traits\HasTenant;
 use Database\Factories\CalibrationPointFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Traits\HasTenant;
 
 class CalibrationPoint extends Model
 {
     /** @use HasFactory<CalibrationPointFactory> */
-    use HasFactory, HasUuids, HasTenant;
+    use HasFactory, HasTenant, HasUuids;
 
     protected $fillable = [
         'calibration_id',

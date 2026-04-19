@@ -7,11 +7,12 @@ use App\Rules\CnpjRule;
 describe('CnpjRule', function (): void {
     function validateCnpj(string $value): bool
     {
-        $rule = new CnpjRule();
+        $rule = new CnpjRule;
         $passed = true;
         $rule->validate('cnpj', $value, function () use (&$passed): void {
             $passed = false;
         });
+
         return $passed;
     }
 
