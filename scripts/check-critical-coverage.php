@@ -70,25 +70,37 @@ exit(0);
 
 function findFileCoverage(SimpleXMLElement $xml, string $pathFragment): ?float
 {
-    foreach ($xml->project->file ?? [] as $file) {
+    // PHPUnit Clover XML nests files inside <package> elements (one per namespace).
+    // Search both top-level <file> nodes and those inside <package> children.
+    $candidates = array_merge(
+        iterator_to_array($xml->project->file ?? [], false),
+        ...array_map(
+            fn ($pkg) => iterator_to_array($pkg->file ?? [], false),
+            iterator_to_array($xml->project->package ?? [], false),
+        ),
+    );
+
+    foreach ($candidates as $file) {
         $name = (string) $file['name'];
 
-        if (str_contains($name, $pathFragment)) {
-            $metrics = $file->metrics;
-
-            if ($metrics === null) {
-                return null;
-            }
-
-            $total = (int) $metrics['statements'];
-            $covered = (int) $metrics['coveredstatements'];
-
-            if ($total === 0) {
-                return 100.0;
-            }
-
-            return round(($covered / $total) * 100, 2);
+        if (! str_contains($name, $pathFragment)) {
+            continue;
         }
+
+        $metrics = $file->metrics;
+
+        if ($metrics === null) {
+            return null;
+        }
+
+        $total = (int) $metrics['statements'];
+        $covered = (int) $metrics['coveredstatements'];
+
+        if ($total === 0) {
+            return 100.0;
+        }
+
+        return round(($covered / $total) * 100, 2);
     }
 
     return null;

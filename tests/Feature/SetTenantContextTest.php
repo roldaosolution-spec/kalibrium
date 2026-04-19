@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Middleware\SetTenantContext;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SetTenantContext middleware coverage
@@ -23,6 +26,17 @@ describe('SetTenantContext middleware', function (): void {
     it('[AC-001-02] requisição sem autenticação retorna 401', function (): void {
         $this->getJson('/api/user')
             ->assertStatus(401);
+    });
+
+    it('[AC-001-02] middleware aborta 401 quando usuário não tem tenant_id', function (): void {
+        // Route-level auth:sanctum runs before SetTenantContext can reject null users,
+        // so test the middleware directly to cover the abort(401) branch.
+        $middleware = new SetTenantContext;
+        $request = Request::create('/api/user', 'GET');
+        $request->setUserResolver(fn () => null);
+
+        expect(fn () => $middleware->handle($request, fn () => response('ok')))
+            ->toThrow(HttpException::class);
     });
 
     it('[AC-001-02] usuário autenticado com tenant_id válido define contexto e prossegue', function (): void {
