@@ -22,8 +22,10 @@ class SetTenantContext
 
         TenantContext::set($tenantId);
 
-        // Configura RLS no PostgreSQL para a conexão atual
-        DB::statement('SET LOCAL app.current_tenant_id = ?', [$tenantId]);
+        // SET (session-level) so RLS policy applies to all subsequent queries in this
+        // connection. SET LOCAL would be scoped to the implicit autocommit transaction
+        // and would be lost before any real query executes.
+        DB::statement('SET app.current_tenant_id = ?', [$tenantId]);
 
         return $next($request);
     }

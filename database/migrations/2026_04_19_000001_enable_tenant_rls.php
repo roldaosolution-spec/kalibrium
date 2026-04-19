@@ -46,6 +46,11 @@ return new class extends Migration
                     NULLIF(current_setting('app.current_tenant_id', true), '') AS uuid
                 )
             )
+            WITH CHECK (
+                tenant_id = CAST(
+                    NULLIF(current_setting('app.current_tenant_id', true), '') AS uuid
+                )
+            )
         ");
 
         // ── audits table ───────────────────────────────────────────────────────
@@ -57,6 +62,12 @@ return new class extends Migration
         DB::unprepared("
             CREATE POLICY tenant_isolation ON audits
             USING (
+                tenant_id IS NULL
+                OR tenant_id = CAST(
+                    NULLIF(current_setting('app.current_tenant_id', true), '') AS uuid
+                )
+            )
+            WITH CHECK (
                 tenant_id IS NULL
                 OR tenant_id = CAST(
                     NULLIF(current_setting('app.current_tenant_id', true), '') AS uuid

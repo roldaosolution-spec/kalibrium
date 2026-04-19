@@ -3,13 +3,22 @@
 use App\Models\Scopes\TenantContext;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SetTenantContext middleware coverage
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe('SetTenantContext middleware', function () {
-    afterEach(fn () => TenantContext::clear());
+    afterEach(function () {
+        TenantContext::clear();
+
+        // SET (session-level) is not rolled back by RefreshDatabase's transaction ROLLBACK.
+        // Explicitly reset to prevent GUC leakage between tests.
+        if (config('database.default') === 'pgsql') {
+            DB::statement('RESET app.current_tenant_id');
+        }
+    });
 
     it('[AC-001-02] requisição sem autenticação retorna 401', function () {
         $this->getJson('/api/user')
