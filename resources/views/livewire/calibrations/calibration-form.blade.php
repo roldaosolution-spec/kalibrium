@@ -18,10 +18,30 @@
     @if ($calibration->status === \App\Enums\CalibrationStatus::InProgress)
         <h2>Adicionar Ponto</h2>
         <div>
-            <input wire:model="nominalValue" type="number" step="0.000001" placeholder="Valor nominal">
-            <input wire:model="measuredValue" type="number" step="0.000001" placeholder="Valor medido">
-            <input wire:model="unit" type="text" placeholder="Unidade">
-            <input wire:model="uncertainty" type="number" step="0.000001" placeholder="Incerteza">
+            <label for="nominalValue">Valor nominal <span aria-label="obrigatório">*</span></label>
+            <input wire:model="nominalValue" id="nominalValue" type="number" step="0.000001" required
+                aria-invalid="@error('nominalValue') true @else false @enderror"
+                @error('nominalValue') aria-describedby="nominalValue-error" @enderror>
+            @error('nominalValue') <span id="nominalValue-error">{{ $message }}</span> @enderror
+
+            <label for="measuredValue">Valor medido <span aria-label="obrigatório">*</span></label>
+            <input wire:model="measuredValue" id="measuredValue" type="number" step="0.000001" required
+                aria-invalid="@error('measuredValue') true @else false @enderror"
+                @error('measuredValue') aria-describedby="measuredValue-error" @enderror>
+            @error('measuredValue') <span id="measuredValue-error">{{ $message }}</span> @enderror
+
+            <label for="unit">Unidade <span aria-label="obrigatório">*</span></label>
+            <input wire:model="unit" id="unit" type="text" required
+                aria-invalid="@error('unit') true @else false @enderror"
+                @error('unit') aria-describedby="unit-error" @enderror>
+            @error('unit') <span id="unit-error">{{ $message }}</span> @enderror
+
+            <label for="uncertainty">Incerteza <span aria-label="obrigatório">*</span></label>
+            <input wire:model="uncertainty" id="uncertainty" type="number" step="0.000001" required
+                aria-invalid="@error('uncertainty') true @else false @enderror"
+                @error('uncertainty') aria-describedby="uncertainty-error" @enderror>
+            @error('uncertainty') <span id="uncertainty-error">{{ $message }}</span> @enderror
+
             <button wire:click="addPoint">Adicionar Ponto</button>
         </div>
 
