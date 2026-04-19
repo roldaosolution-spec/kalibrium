@@ -144,7 +144,7 @@ describe('AC-004-06: ClientForm', function (): void {
         Livewire::actingAs($user)
             ->test(ClientForm::class)
             ->set('name', 'Nova Empresa')
-            ->set('cnpj', '12.345.678/0001-90')
+            ->set('cnpj', '11.222.333/0001-81')
             ->set('email', 'contato@nova.com.br')
             ->call('save')
             ->assertHasNoErrors()
@@ -199,6 +199,52 @@ describe('AC-004-06: ClientForm', function (): void {
             ->assertRedirect(route('clients.index'));
 
         expect($client->fresh()->name)->toBe('Nome Atualizado');
+    });
+
+    it('[KAL-69] save rejeita CNPJ com formato invalido', function (): void {
+        ['user' => $user] = makeCrudFixture(Role::Gerente->value);
+
+        Livewire::actingAs($user)
+            ->test(ClientForm::class)
+            ->set('name', 'Empresa Teste')
+            ->set('cnpj', '12345678000195')
+            ->call('save')
+            ->assertHasErrors(['cnpj']);
+    });
+
+    it('[KAL-69] save rejeita CNPJ com digito verificador invalido', function (): void {
+        ['user' => $user] = makeCrudFixture(Role::Gerente->value);
+
+        Livewire::actingAs($user)
+            ->test(ClientForm::class)
+            ->set('name', 'Empresa Teste')
+            ->set('cnpj', '11.222.333/0001-99')
+            ->call('save')
+            ->assertHasErrors(['cnpj']);
+    });
+
+    it('[KAL-69] save aceita CNPJ nulo', function (): void {
+        ['user' => $user] = makeCrudFixture(Role::Gerente->value);
+
+        Livewire::actingAs($user)
+            ->test(ClientForm::class)
+            ->set('name', 'Empresa Sem CNPJ')
+            ->set('cnpj', '')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('clients.index'));
+    });
+
+    it('[KAL-69] save aceita CNPJ valido com digito verificador correto', function (): void {
+        ['user' => $user] = makeCrudFixture(Role::Gerente->value);
+
+        Livewire::actingAs($user)
+            ->test(ClientForm::class)
+            ->set('name', 'Empresa CNPJ Valido')
+            ->set('cnpj', '99.999.999/0001-91')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('clients.index'));
     });
 });
 

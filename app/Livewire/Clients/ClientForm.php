@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Clients;
 
 use App\Models\Client;
+use App\Rules\CnpjRule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -42,7 +43,7 @@ class ClientForm extends Component
     {
         $data = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'cnpj' => ['nullable', 'string', 'max:18'],
+            'cnpj' => ['nullable', 'string', new CnpjRule],
             'address' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
