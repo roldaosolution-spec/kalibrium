@@ -18,6 +18,13 @@ use Illuminate\Support\Facades\DB;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
+/**
+ * @property CalibrationStatus $status
+ * @property string|null $executor_id
+ * @property string|null $verifier_id
+ * @property \Carbon\Carbon|null $started_at
+ * @property \Carbon\Carbon|null $completed_at
+ */
 class Calibration extends Model implements AuditableContract
 {
     /** @use HasFactory<CalibrationFactory> */
@@ -64,8 +71,10 @@ class Calibration extends Model implements AuditableContract
             );
         }
 
-        $this->status = $newStatus;
-        $this->save();
+        DB::transaction(function () use ($newStatus): void {
+            $this->status = $newStatus;
+            $this->save();
+        });
     }
 
     public function start(User $executor): void
@@ -74,17 +83,22 @@ class Calibration extends Model implements AuditableContract
         $this->assertTechnicianCompetency($executor);
         $this->assertStandardValid();
 
-        $this->executor_id = $executor->id;
-        $this->status = CalibrationStatus::InProgress;
-        $this->started_at = now();
-        $this->save();
+        DB::transaction(function () use ($executor): void {
+            $this->executor_id = $executor->id;
+            $this->status = CalibrationStatus::InProgress;
+            $this->started_at = now();
+            $this->save();
+        });
     }
 
     public function submitForReview(): void
     {
         $this->assertTransitionAllowed(CalibrationStatus::PendingReview);
-        $this->status = CalibrationStatus::PendingReview;
-        $this->save();
+
+        DB::transaction(function (): void {
+            $this->status = CalibrationStatus::PendingReview;
+            $this->save();
+        });
     }
 
     public function approve(User $verifier): void
@@ -99,10 +113,12 @@ class Calibration extends Model implements AuditableContract
 
         $this->assertTechnicianCompetency($verifier);
 
-        $this->verifier_id = $verifier->id;
-        $this->status = CalibrationStatus::Approved;
-        $this->completed_at = now();
-        $this->save();
+        DB::transaction(function () use ($verifier): void {
+            $this->verifier_id = $verifier->id;
+            $this->status = CalibrationStatus::Approved;
+            $this->completed_at = now();
+            $this->save();
+        });
     }
 
     public function issue(): void
@@ -119,19 +135,26 @@ class Calibration extends Model implements AuditableContract
     public function cancel(): void
     {
         $this->assertTransitionAllowed(CalibrationStatus::Cancelled);
-        $this->status = CalibrationStatus::Cancelled;
-        $this->save();
+
+        DB::transaction(function (): void {
+            $this->status = CalibrationStatus::Cancelled;
+            $this->save();
+        });
     }
 
     private function nextCertificateNumber(): string
     {
         $year = (int) date('Y');
-        // PostgreSQL does not allow FOR UPDATE with aggregate functions.
+        // lockForUpdate() serialises concurrent issuances within the transaction.
+        // select() + orderByDesc() avoids the aggregate-with-FOR-UPDATE restriction.
         $last = static::withoutGlobalScopes()
+            ->select('certificate_number')
             ->where('tenant_id', $this->tenant_id)
             ->whereBetween('created_at', ["{$year}-01-01", ($year + 1) . '-01-01'])
             ->whereNotNull('certificate_number')
-            ->max('certificate_number');
+            ->orderByDesc('certificate_number')
+            ->lockForUpdate()
+            ->first()?->certificate_number;
 
         $seq = $last !== null ? ((int) substr($last, -4)) + 1 : 1;
 
@@ -150,7 +173,13 @@ class Calibration extends Model implements AuditableContract
     private function assertTechnicianCompetency(User $user): void
     {
         $this->loadMissing('instrument');
-        $domain = $this->instrument->domain;
+        $instrument = $this->instrument;
+
+        if ($instrument === null) {
+            throw new \LogicException('Instrumento não encontrado — não é possível verificar competência técnica.');
+        }
+
+        $domain = $instrument->domain;
 
         // tenant_id scopes the lookup correctly and hits the (tenant_id, user_id, domain) unique index
         $hasCompetency = TechnicianCompetency::withoutGlobalScopes()

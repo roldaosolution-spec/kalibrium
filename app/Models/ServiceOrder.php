@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\DB;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
+/**
+ * @property ServiceOrderStatus $status
+ * @property ServiceOrderMode $mode
+ */
 class ServiceOrder extends Model implements AuditableContract
 {
     /** @use HasFactory<ServiceOrderFactory> */
@@ -48,7 +52,10 @@ class ServiceOrder extends Model implements AuditableContract
     {
         static::creating(function (self $model): void {
             if (empty($model->number)) {
-                $model->number = static::nextNumber($model->tenant_id ?? '');
+                // Wrap in a transaction so lockForUpdate() inside nextNumber() is effective.
+                DB::transaction(function () use ($model): void {
+                    $model->number = static::nextNumber($model->tenant_id ?? '');
+                });
             }
         });
     }
@@ -56,13 +63,19 @@ class ServiceOrder extends Model implements AuditableContract
     public static function nextNumber(string $tenantId): string
     {
         $year = (int) date('Y');
-        // whereBetween lets the DB use an index on created_at; whereYear() cannot
-        $count = static::withoutGlobalScopes()
+        // lockForUpdate() serialises concurrent order creation within the transaction.
+        // select() + orderByDesc() avoids the aggregate-with-FOR-UPDATE restriction.
+        $last = static::withoutGlobalScopes()
+            ->select('number')
             ->where('tenant_id', $tenantId)
             ->whereBetween('created_at', ["{$year}-01-01", ($year + 1) . '-01-01'])
-            ->count();
+            ->orderByDesc('number')
+            ->lockForUpdate()
+            ->first()?->number;
 
-        return 'OS-' . $year . '-' . str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
+        $seq = $last !== null ? ((int) substr($last, -4)) + 1 : 1;
+
+        return 'OS-' . $year . '-' . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
     }
 
     public function changeStatus(ServiceOrderStatus $newStatus): void
@@ -73,8 +86,10 @@ class ServiceOrder extends Model implements AuditableContract
             );
         }
 
-        $this->status = $newStatus;
-        $this->save();
+        DB::transaction(function () use ($newStatus): void {
+            $this->status = $newStatus;
+            $this->save();
+        });
     }
 
     /** @return BelongsTo<Client, $this> */
