@@ -14,7 +14,7 @@ trait HasTenant
     {
         static::addGlobalScope(new TenantScope);
 
-        static::creating(function (self $model) {
+        static::creating(function (self $model): void {
             if (empty($model->tenant_id)) {
                 $tenantId = TenantContext::getId();
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 // ──────────────────────────────────────────────────────────────────────────────
 
 // AC-001-03: user do Tenant A não acessa dados do Tenant B
-it('[AC-001-03] TenantScope impede acesso a registros de outro tenant', function () {
+it('[AC-001-03] TenantScope impede acesso a registros de outro tenant', function (): void {
     $tenantA = Tenant::factory()->create();
     $tenantB = Tenant::factory()->create();
 
@@ -31,10 +31,10 @@ it('[AC-001-03] TenantScope impede acesso a registros de outro tenant', function
 // AC-002-01: tenant_id auto-injected from auth context on record creation
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('AC-002-01: auto-injeção de tenant_id na criação', function () {
+describe('AC-002-01: auto-injeção de tenant_id na criação', function (): void {
     afterEach(fn () => TenantContext::clear());
 
-    it('[AC-002-01] HasTenant injeta tenant_id automaticamente a partir do contexto', function () {
+    it('[AC-002-01] HasTenant injeta tenant_id automaticamente a partir do contexto', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
 
@@ -43,7 +43,7 @@ describe('AC-002-01: auto-injeção de tenant_id na criação', function () {
         expect($user->tenant_id)->toBe($tenant->id);
     });
 
-    it('[AC-002-01] HasTenant lança RuntimeException ao criar sem contexto definido', function () {
+    it('[AC-002-01] HasTenant lança RuntimeException ao criar sem contexto definido', function (): void {
         TenantContext::clear();
 
         expect(fn () => User::factory()->create())->toThrow(RuntimeException::class);
@@ -54,10 +54,10 @@ describe('AC-002-01: auto-injeção de tenant_id na criação', function () {
 // AC-002-02: TenantScope filters all Eloquent queries by current tenant
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('AC-002-02: TenantScope filtra queries Eloquent pelo tenant atual', function () {
+describe('AC-002-02: TenantScope filtra queries Eloquent pelo tenant atual', function (): void {
     afterEach(fn () => TenantContext::clear());
 
-    it('[AC-002-02] User::all() retorna apenas registros do tenant em contexto', function () {
+    it('[AC-002-02] User::all() retorna apenas registros do tenant em contexto', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -77,13 +77,13 @@ describe('AC-002-02: TenantScope filtra queries Eloquent pelo tenant atual', fun
             ->and($visible->pluck('id'))->not->toContain($userB1->id);
     });
 
-    it('[AC-002-02] TenantScope lança RuntimeException quando contexto não está definido', function () {
+    it('[AC-002-02] TenantScope lança RuntimeException quando contexto não está definido', function (): void {
         TenantContext::clear();
 
         expect(fn () => User::all())->toThrow(RuntimeException::class);
     });
 
-    it('[AC-002-02] User::find não retorna registro pertencente a outro tenant', function () {
+    it('[AC-002-02] User::find não retorna registro pertencente a outro tenant', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -101,10 +101,10 @@ describe('AC-002-02: TenantScope filtra queries Eloquent pelo tenant atual', fun
 // AC-002-03: PostgreSQL RLS policy blocks cross-tenant raw SQL (PostgreSQL only)
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function () {
+describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function (): void {
     afterEach(fn () => TenantContext::clear());
 
-    it('[AC-002-03] Política RLS tenant_isolation existe e está configurada na tabela users', function () {
+    it('[AC-002-03] Política RLS tenant_isolation existe e está configurada na tabela users', function (): void {
         $policies = DB::select("
             SELECT p.polname, pg_get_expr(p.polqual, p.polrelid) AS policy_using
             FROM pg_policy p
@@ -115,9 +115,9 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function () {
         expect($policies)->not->toBeEmpty()
             ->and($policies[0]->polname)->toBe('tenant_isolation')
             ->and($policies[0]->policy_using)->toContain('current_tenant_id');
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 
-    it('[AC-002-03] FORCE ROW LEVEL SECURITY habilitado na tabela users', function () {
+    it('[AC-002-03] FORCE ROW LEVEL SECURITY habilitado na tabela users', function (): void {
         $result = DB::select("
             SELECT relrowsecurity, relforcerowsecurity
             FROM pg_class WHERE relname = 'users'
@@ -126,9 +126,9 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function () {
         expect($result)->not->toBeEmpty()
             ->and((bool) $result[0]->relrowsecurity)->toBeTrue()
             ->and((bool) $result[0]->relforcerowsecurity)->toBeTrue();
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 
-    it('[AC-002-03] RLS bloqueia SQL bruto com tenant errado ao operar como kalibrium_app', function () {
+    it('[AC-002-03] RLS bloqueia SQL bruto com tenant errado ao operar como kalibrium_app', function (): void {
         $roleExists = DB::select("SELECT 1 AS r FROM pg_roles WHERE rolname = 'kalibrium_app'");
 
         if (empty($roleExists)) {
@@ -165,17 +165,17 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function () {
         } finally {
             DB::statement('RESET ROLE');
         }
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
 // AC-002-04: Tenant A cannot see Tenant B data
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('AC-002-04: Tenant A não acessa dados do Tenant B', function () {
+describe('AC-002-04: Tenant A não acessa dados do Tenant B', function (): void {
     afterEach(fn () => TenantContext::clear());
 
-    it('[AC-002-04] Tenant A não vê usuários do Tenant B via Eloquent', function () {
+    it('[AC-002-04] Tenant A não vê usuários do Tenant B via Eloquent', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -198,7 +198,7 @@ describe('AC-002-04: Tenant A não acessa dados do Tenant B', function () {
         }
     });
 
-    it('[AC-002-04] User::where não vaza registros de outro tenant', function () {
+    it('[AC-002-04] User::where não vaza registros de outro tenant', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -214,7 +214,7 @@ describe('AC-002-04: Tenant A não acessa dados do Tenant B', function () {
         expect($found)->toBeNull();
     });
 
-    it('[AC-002-04] factory()->forTenant() vincula usuário ao tenant correto', function () {
+    it('[AC-002-04] factory()->forTenant() vincula usuário ao tenant correto', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
 
@@ -232,10 +232,10 @@ describe('AC-002-04: Tenant A não acessa dados do Tenant B', function () {
 // F4: IDOR — authenticated user cannot access cross-tenant records by direct ID
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function () {
+describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function (): void {
     afterEach(fn () => TenantContext::clear());
 
-    it('[F4] usuário do Tenant A não obtém dados do Tenant B via /api/user por ID', function () {
+    it('[F4] usuário do Tenant A não obtém dados do Tenant B via /api/user por ID', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -257,7 +257,7 @@ describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function ()
         expect($found)->toBeNull('IDOR: User A não deve acessar User B via User::find($id)');
     });
 
-    it('[F4] User::where(id) não vaza registro IDOR de outro tenant', function () {
+    it('[F4] User::where(id) não vaza registro IDOR de outro tenant', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -271,7 +271,7 @@ describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function ()
         expect($found)->toBeNull('IDOR: User::where(id) não deve retornar registro de outro tenant');
     });
 
-    it('[F4] HTTP GET /api/user retorna dados do usuário autenticado, não de outro tenant', function () {
+    it('[F4] HTTP GET /api/user retorna dados do usuário autenticado, não de outro tenant', function (): void {
         $tenantA = Tenant::factory()->create();
         $tenantB = Tenant::factory()->create();
 
@@ -294,15 +294,15 @@ describe('F4: IDOR — acesso cross-tenant por ID direto bloqueado', function ()
 // AC-002-05: RLS policy active in CI migration (PostgreSQL only)
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('AC-002-05: RLS ativo após migration em CI', function () {
-    it('[AC-002-05] RLS habilitado na tabela users após execução das migrations', function () {
+describe('AC-002-05: RLS ativo após migration em CI', function (): void {
+    it('[AC-002-05] RLS habilitado na tabela users após execução das migrations', function (): void {
         $result = DB::select("SELECT relrowsecurity FROM pg_class WHERE relname = 'users'");
 
         expect($result)->not->toBeEmpty()
             ->and((bool) $result[0]->relrowsecurity)->toBeTrue();
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 
-    it('[AC-002-05] Política tenant_isolation existe na tabela audits após migration', function () {
+    it('[AC-002-05] Política tenant_isolation existe na tabela audits após migration', function (): void {
         $policies = DB::select("
             SELECT p.polname
             FROM pg_policy p
@@ -311,9 +311,9 @@ describe('AC-002-05: RLS ativo após migration em CI', function () {
         ");
 
         expect($policies)->not->toBeEmpty();
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 
-    it('[AC-002-05] Role kalibrium_app existe sem superuser e sem BYPASSRLS', function () {
+    it('[AC-002-05] Role kalibrium_app existe sem superuser e sem BYPASSRLS', function (): void {
         $role = DB::select("
             SELECT rolsuper, rolbypassrls
             FROM pg_roles WHERE rolname = 'kalibrium_app'
@@ -322,5 +322,5 @@ describe('AC-002-05: RLS ativo após migration em CI', function () {
         expect($role)->not->toBeEmpty()
             ->and((bool) $role[0]->rolsuper)->toBeFalse()
             ->and((bool) $role[0]->rolbypassrls)->toBeFalse();
-    })->skip(fn () => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
+    })->skip(fn (): bool => config('database.default') !== 'pgsql', 'Requer PostgreSQL');
 });

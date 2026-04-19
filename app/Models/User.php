@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Concerns\HasTenant;
@@ -35,6 +37,7 @@ class User extends Authenticatable implements AuditableContract
         'two_factor_recovery_codes',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

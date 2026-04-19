@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\DB;
 // SetTenantContext middleware coverage
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe('SetTenantContext middleware', function () {
-    afterEach(function () {
+describe('SetTenantContext middleware', function (): void {
+    afterEach(function (): void {
         TenantContext::clear();
 
         // SET (session-level) is not rolled back by RefreshDatabase's transaction ROLLBACK.
@@ -20,12 +20,12 @@ describe('SetTenantContext middleware', function () {
         }
     });
 
-    it('[AC-001-02] requisição sem autenticação retorna 401', function () {
+    it('[AC-001-02] requisição sem autenticação retorna 401', function (): void {
         $this->getJson('/api/user')
             ->assertStatus(401);
     });
 
-    it('[AC-001-02] usuário autenticado com tenant_id válido define contexto e prossegue', function () {
+    it('[AC-001-02] usuário autenticado com tenant_id válido define contexto e prossegue', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
         $user = User::factory()->create(['tenant_id' => $tenant->id]);
@@ -40,7 +40,7 @@ describe('SetTenantContext middleware', function () {
             ->assertJsonPath('tenant_id', $tenant->id);
     });
 
-    it('[AC-001-02] HasTenant::tenant() retorna o Tenant correto', function () {
+    it('[AC-001-02] HasTenant::tenant() retorna o Tenant correto', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
         $user = User::factory()->create(['tenant_id' => $tenant->id]);

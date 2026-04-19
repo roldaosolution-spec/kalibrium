@@ -23,6 +23,7 @@ class Tenant extends Model
         'settings',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [
