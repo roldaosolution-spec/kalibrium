@@ -10,6 +10,11 @@ use App\Models\User;
 
 class ProcedurePolicy
 {
+    private function isManager(User $user): bool
+    {
+        return in_array($user->role->value, Role::managerRoles(), true);
+    }
+
     private function isGerente(User $user): bool
     {
         return $user->role === Role::Gerente;
@@ -17,7 +22,7 @@ class ProcedurePolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->isManager($user) || $user->role === Role::Tecnico;
     }
 
     public function view(User $user, Procedure $procedure): bool

@@ -22,7 +22,7 @@ class StandardPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->isManager($user) || $user->role === Role::Tecnico;
     }
 
     public function view(User $user, Standard $standard): bool

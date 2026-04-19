@@ -22,7 +22,7 @@ class CalibrationPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->isManager($user) || $this->isTechnician($user);
     }
 
     public function view(User $user, Calibration $calibration): bool

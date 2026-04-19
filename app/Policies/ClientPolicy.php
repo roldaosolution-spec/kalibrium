@@ -22,7 +22,7 @@ class ClientPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->isManager($user);
     }
 
     public function view(User $user, Client $client): bool
