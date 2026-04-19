@@ -6,6 +6,9 @@ namespace App\Models;
 
 use App\Enums\ServiceOrderMode;
 use App\Enums\ServiceOrderStatus;
+use App\Exceptions\InvalidTransitionException;
+use App\Models\Concerns\AuthorizationHelpers;
+use App\Models\Concerns\GeneratesAnnualSequenceNumber;
 use App\Models\Concerns\HasTenant;
 use Database\Factories\ServiceOrderFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -25,7 +28,7 @@ use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 class ServiceOrder extends Model implements AuditableContract
 {
     /** @use HasFactory<ServiceOrderFactory> */
-    use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
+    use Auditable, AuthorizationHelpers, GeneratesAnnualSequenceNumber, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'number',
@@ -62,29 +65,12 @@ class ServiceOrder extends Model implements AuditableContract
 
     public static function nextNumber(string $tenantId): string
     {
-        $year = (int) date('Y');
-        // lockForUpdate() serialises concurrent order creation within the transaction.
-        // select() + orderByDesc() avoids the aggregate-with-FOR-UPDATE restriction.
-        $last = static::withoutGlobalScopes()
-            ->select('number')
-            ->where('tenant_id', $tenantId)
-            ->whereBetween('created_at', ["{$year}-01-01", ($year + 1) . '-01-01'])
-            ->orderByDesc('number')
-            ->lockForUpdate()
-            ->first()?->number;
-
-        $seq = $last !== null ? ((int) substr($last, -4)) + 1 : 1;
-
-        return 'OS-' . $year . '-' . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        return static::generateAnnualSequenceNumber('OS-', 'number', $tenantId);
     }
 
     public function changeStatus(ServiceOrderStatus $newStatus): void
     {
-        if (! $this->status->canTransitionTo($newStatus)) {
-            throw new \LogicException(
-                "Transição inválida: {$this->status->value} → {$newStatus->value}",
-            );
-        }
+        $this->assertTransitionAllowed($newStatus);
 
         DB::transaction(function () use ($newStatus): void {
             $this->status = $newStatus;

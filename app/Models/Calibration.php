@@ -6,6 +6,9 @@ namespace App\Models;
 
 use App\Enums\CalibrationStatus;
 use App\Enums\Domain;
+use App\Exceptions\InvalidTransitionException;
+use App\Models\Concerns\AuthorizationHelpers;
+use App\Models\Concerns\GeneratesAnnualSequenceNumber;
 use App\Models\Concerns\HasTenant;
 use Database\Factories\CalibrationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -28,7 +31,7 @@ use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 class Calibration extends Model implements AuditableContract
 {
     /** @use HasFactory<CalibrationFactory> */
-    use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
+    use Auditable, AuthorizationHelpers, GeneratesAnnualSequenceNumber, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'service_order_id',
@@ -65,11 +68,7 @@ class Calibration extends Model implements AuditableContract
 
     public function changeStatus(CalibrationStatus $newStatus): void
     {
-        if (! $this->status->canTransitionTo($newStatus)) {
-            throw new \LogicException(
-                "Transição inválida: {$this->status->value} → {$newStatus->value}",
-            );
-        }
+        $this->assertTransitionAllowed($newStatus);
 
         DB::transaction(function () use ($newStatus): void {
             $this->status = $newStatus;
@@ -80,7 +79,8 @@ class Calibration extends Model implements AuditableContract
     public function start(User $executor): void
     {
         $this->assertTransitionAllowed(CalibrationStatus::InProgress);
-        $this->assertTechnicianCompetency($executor);
+        $this->loadMissing('instrument');
+        $this->assertTechnicianCompetency($executor, $this->instrument->domain);
         $this->assertStandardValid();
 
         DB::transaction(function () use ($executor): void {
@@ -106,12 +106,13 @@ class Calibration extends Model implements AuditableContract
         $this->assertTransitionAllowed(CalibrationStatus::Approved);
 
         if ($verifier->id === $this->executor_id) {
-            throw new \LogicException(
+            throw new InvalidTransitionException(
                 'Verificador não pode ser o mesmo que o executor (dual sign-off ISO 17025)',
             );
         }
 
-        $this->assertTechnicianCompetency($verifier);
+        $this->loadMissing('instrument');
+        $this->assertTechnicianCompetency($verifier, $this->instrument->domain);
 
         DB::transaction(function () use ($verifier): void {
             $this->verifier_id = $verifier->id;
@@ -126,7 +127,7 @@ class Calibration extends Model implements AuditableContract
         $this->assertTransitionAllowed(CalibrationStatus::Issued);
 
         DB::transaction(function (): void {
-            $this->certificate_number = $this->nextCertificateNumber();
+            $this->certificate_number = $this->generateCertificateNumber();
             $this->status = CalibrationStatus::Issued;
             $this->save();
         });
@@ -142,11 +143,9 @@ class Calibration extends Model implements AuditableContract
         });
     }
 
-    private function nextCertificateNumber(): string
+    private function generateCertificateNumber(): string
     {
         $year = (int) date('Y');
-        // lockForUpdate() serialises concurrent issuances within the transaction.
-        // select() + orderByDesc() avoids the aggregate-with-FOR-UPDATE restriction.
         $last = static::withoutGlobalScopes()
             ->select('certificate_number')
             ->where('tenant_id', $this->tenant_id)
@@ -161,47 +160,12 @@ class Calibration extends Model implements AuditableContract
         return 'CERT-' . $year . '-' . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
     }
 
-    private function assertTransitionAllowed(CalibrationStatus $newStatus): void
-    {
-        if (! $this->status->canTransitionTo($newStatus)) {
-            throw new \LogicException(
-                "Transição inválida: {$this->status->value} → {$newStatus->value}",
-            );
-        }
-    }
-
-    private function assertTechnicianCompetency(User $user): void
-    {
-        $this->loadMissing('instrument');
-        $instrument = $this->instrument;
-
-        if ($instrument === null) {
-            throw new \LogicException('Instrumento não encontrado — não é possível verificar competência técnica.');
-        }
-
-        $domain = $instrument->domain;
-
-        // tenant_id scopes the lookup correctly and hits the (tenant_id, user_id, domain) unique index
-        $hasCompetency = TechnicianCompetency::withoutGlobalScopes()
-            ->where('tenant_id', $this->tenant_id)
-            ->where('user_id', $user->id)
-            ->where('domain', $domain->value)
-            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-            ->exists();
-
-        if (! $hasCompetency) {
-            throw new \LogicException(
-                "Técnico não possui competência válida para o domínio: {$domain->label()}",
-            );
-        }
-    }
-
     private function assertStandardValid(): void
     {
         $this->loadMissing('standard');
 
         if ($this->standard !== null && ! $this->standard->isValidForUse()) {
-            throw new \LogicException(
+            throw new InvalidTransitionException(
                 'Padrão de calibração com certificado vencido — calibração bloqueada',
             );
         }
