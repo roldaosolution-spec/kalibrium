@@ -152,7 +152,8 @@ describe('AC-002-03: RLS bloqueia SQL bruto entre tenants', function (): void {
         DB::unprepared('GRANT SELECT ON users TO kalibrium_app');
 
         // Set Tenant A context then switch to non-superuser role so RLS takes effect
-        DB::statement('SET LOCAL app.current_tenant_id = ?', [$tenantA->id]);
+        // PostgreSQL SET does not support prepared statement parameters — use literal string.
+        DB::statement("SET LOCAL app.current_tenant_id = '{$tenantA->id}'");
         DB::statement('SET LOCAL ROLE kalibrium_app');
 
         try {
