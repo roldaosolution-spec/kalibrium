@@ -3,6 +3,8 @@
 /public/build
 /public/hot
 /storage/*.key
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/testing/*
