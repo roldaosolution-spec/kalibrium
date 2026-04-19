@@ -21,7 +21,6 @@ class Instrument extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'client_id',
         'serial_number',
         'type',

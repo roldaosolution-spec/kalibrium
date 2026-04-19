@@ -21,7 +21,6 @@ class TechnicianCompetency extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'user_id',
         'domain',
         'qualified_at',
@@ -45,11 +44,13 @@ class TechnicianCompetency extends Model implements AuditableContract
         return $this->belongsTo(User::class);
     }
 
+    /** AC-004-08: null expires_at means the qualification never expires. */
     public function isExpired(): bool
     {
         return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
+    /** AC-004-08: gate check before assigning this technician to a calibration workflow. */
     public function isValidForDomain(Domain $domain): bool
     {
         return $this->domain === $domain && ! $this->isExpired();

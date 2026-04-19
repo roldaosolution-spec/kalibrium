@@ -24,7 +24,6 @@ class Calibration extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'service_order_id',
         'instrument_id',
         'standard_id',
@@ -56,7 +55,7 @@ class Calibration extends Model implements AuditableContract
         });
     }
 
-    public function transitionTo(CalibrationStatus $newStatus): void
+    public function changeStatus(CalibrationStatus $newStatus): void
     {
         if (! $this->status->canTransitionTo($newStatus)) {
             throw new \LogicException(
@@ -126,12 +125,11 @@ class Calibration extends Model implements AuditableContract
     private function nextCertificateNumber(): string
     {
         $year = (int) date('Y');
-        // whereBetween on indexed created_at; lockForUpdate serialises concurrent issue() calls
+        // PostgreSQL does not allow FOR UPDATE with aggregate functions.
         $last = static::withoutGlobalScopes()
             ->where('tenant_id', $this->tenant_id)
             ->whereBetween('created_at', ["{$year}-01-01", ($year + 1) . '-01-01'])
             ->whereNotNull('certificate_number')
-            ->lockForUpdate()
             ->max('certificate_number');
 
         $seq = $last !== null ? ((int) substr($last, -4)) + 1 : 1;

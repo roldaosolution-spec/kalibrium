@@ -20,7 +20,6 @@ class Procedure extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'code',
         'title',
         'domain',

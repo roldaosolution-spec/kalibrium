@@ -20,7 +20,6 @@ class Client extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'name',
         'cnpj',
         'address',

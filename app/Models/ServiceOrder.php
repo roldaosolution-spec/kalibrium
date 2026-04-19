@@ -24,7 +24,6 @@ class ServiceOrder extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'number',
         'client_id',
         'mode',
@@ -65,7 +64,7 @@ class ServiceOrder extends Model implements AuditableContract
         return 'OS-' . $year . '-' . str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
     }
 
-    public function transitionTo(ServiceOrderStatus $newStatus): void
+    public function changeStatus(ServiceOrderStatus $newStatus): void
     {
         if (! $this->status->canTransitionTo($newStatus)) {
             throw new \LogicException(

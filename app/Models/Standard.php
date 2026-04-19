@@ -20,7 +20,6 @@ class Standard extends Model implements AuditableContract
     use Auditable, HasFactory, HasTenant, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'serial_number',
         'description',
         'certificate_number',
@@ -41,11 +40,13 @@ class Standard extends Model implements AuditableContract
         ];
     }
 
+    /** AC-004-07: true when validity_date is in the past (today counts as valid). */
     public function isExpired(): bool
     {
         return $this->validity_date->isPast();
     }
 
+    /** AC-004-07: gate check before selecting this standard in a calibration workflow. */
     public function isValidForUse(): bool
     {
         return ! $this->isExpired();
