@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models\Concerns;
 
+use App\Enums\CalibrationStatus;
 use App\Enums\Domain;
+use App\Enums\ServiceOrderStatus;
 use App\Exceptions\InvalidTransitionException;
 use App\Models\TechnicianCompetency;
 use App\Models\User;
-use Illuminate\Contracts\Database\Eloquent\Castable;
 
 trait AuthorizationHelpers
 {
-    protected function assertTransitionAllowed(Castable|string $newStatus): void
+    protected function assertTransitionAllowed(CalibrationStatus|ServiceOrderStatus $newStatus): void
     {
         if (! $this->status->canTransitionTo($newStatus)) {
             throw new InvalidTransitionException(
