@@ -8,10 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
-// Infrastructure note (KAL-20 F6 / KAL-18 F-DOC-04): this middleware is registered
-// only on the 'api' group (bootstrap/app.php). Web routes must NOT access Eloquent
-// models that carry HasTenant — TenantScope will throw RuntimeException without context.
-// If web routes ever need tenant-scoped data, add this middleware to the 'web' group.
+// Infrastructure note (KAL-20 F6 / KAL-18 F-DOC-04 / KAL-67): this middleware is
+// registered on both the 'web' and 'api' groups (bootstrap/app.php). Unauthenticated
+// requests pass through without setting tenant context ($user === null early return).
 //
 // Sanctum's tokenable morphTo uses App\Models\PersonalAccessToken, which bypasses
 // TenantScope so $request->user('sanctum') is safe to call here.

@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->appendToGroup('web', [
+            SetTenantContext::class,
+        ]);
         $middleware->appendToGroup('api', [
             SetTenantContext::class,
         ]);
