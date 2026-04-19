@@ -34,6 +34,7 @@ class CalibrationPointFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'calibration_id' => $calibration->id,
+            'tenant_id' => $calibration->tenant_id,
         ]);
     }
 

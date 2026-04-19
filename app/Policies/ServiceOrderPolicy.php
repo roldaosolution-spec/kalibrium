@@ -27,7 +27,7 @@ class ServiceOrderPolicy
 
     public function view(User $user, ServiceOrder $serviceOrder): bool
     {
-        return true;
+        return $this->viewAny($user) && $serviceOrder->tenant_id === $user->tenant_id;
     }
 
     public function create(User $user): bool

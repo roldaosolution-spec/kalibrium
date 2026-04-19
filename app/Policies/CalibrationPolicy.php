@@ -27,7 +27,7 @@ class CalibrationPolicy
 
     public function view(User $user, Calibration $calibration): bool
     {
-        return true;
+        return $this->viewAny($user) && $calibration->tenant_id === $user->tenant_id;
     }
 
     public function create(User $user): bool

@@ -42,10 +42,18 @@ class CalibrationForm extends Component
     {
         $this->authorize('update', $this->calibration);
 
+        $this->validate([
+            'nominalValue' => 'required|numeric|between:-999999.999999,999999.999999',
+            'measuredValue' => 'required|numeric|between:-999999.999999,999999.999999',
+            'unit' => 'required|string|max:50|regex:/^[a-zA-Z0-9\-\/%°µ]+$/',
+            'uncertainty' => 'required|numeric|min:0|max:999999.999999',
+        ]);
+
         $deviation = $this->measuredValue - $this->nominalValue;
 
         CalibrationPoint::create([
             'calibration_id' => $this->calibration->id,
+            'tenant_id' => $this->calibration->tenant_id,
             'nominal_value' => $this->nominalValue,
             'measured_value' => $this->measuredValue,
             'unit' => $this->unit,
