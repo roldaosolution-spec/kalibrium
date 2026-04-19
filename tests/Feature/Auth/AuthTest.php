@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use PragmaRX\Google2FA\Google2FA;
@@ -242,6 +243,72 @@ describe('AC-003-04: 2FA TOTP pode ser habilitado e verificado', function (): vo
 
         $confirmed = User::withoutGlobalScope(TenantScope::class)->find($user->id);
         expect($confirmed->two_factor_confirmed_at)->not->toBeNull();
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AC-003-06: Mandatory 2FA for gerente and administrativo roles
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('AC-003-06: 2FA obrigatório para gerente e administrativo', function (): void {
+    afterEach(fn () => TenantContext::clear());
+
+    it('[AC-003-06] gerente sem 2FA é redirecionado para página de configuração', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+        $gerente = User::factory()->withRole(Role::Gerente)->create(['tenant_id' => $tenant->id]);
+        TenantContext::clear();
+
+        $response = $this->actingAs($gerente)->get('/home');
+
+        $response->assertRedirect(route('two-factor.setup'));
+    });
+
+    it('[AC-003-06] administrativo sem 2FA é redirecionado para página de configuração', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+        $admin = User::factory()->withRole(Role::Administrativo)->create(['tenant_id' => $tenant->id]);
+        TenantContext::clear();
+
+        $response = $this->actingAs($admin)->get('/home');
+
+        $response->assertRedirect(route('two-factor.setup'));
+    });
+
+    it('[AC-003-06] gerente com 2FA confirmado acessa rota protegida normalmente', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+        $gerente = User::factory()->withRole(Role::Gerente)->withTwoFactorConfirmed()->create(['tenant_id' => $tenant->id]);
+        TenantContext::clear();
+
+        $response = $this->actingAs($gerente)->get('/home');
+
+        $response->assertOk();
+    });
+
+    it('[AC-003-06] tecnico sem 2FA acessa rota protegida sem redirecionamento', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+        $tecnico = User::factory()->withRole(Role::Tecnico)->create(['tenant_id' => $tenant->id]);
+        TenantContext::clear();
+
+        $response = $this->actingAs($tecnico)->get('/home');
+
+        $response->assertOk();
+    });
+
+    it('[AC-003-06] gerente sem 2FA recebe 403 em rota de API com JSON', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+        $gerente = User::factory()->withRole(Role::Gerente)->create(['tenant_id' => $tenant->id]);
+        TenantContext::clear();
+
+        Route::get('/test-2fa-api', fn (): Response => response('ok'))
+            ->middleware(['auth:sanctum', 'two-factor-setup']);
+
+        $response = $this->actingAs($gerente, 'sanctum')->getJson('/test-2fa-api');
+
+        $response->assertForbidden();
     });
 });
 
