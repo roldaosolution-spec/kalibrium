@@ -12,7 +12,7 @@ trait HasTenant
 {
     public static function bootHasTenant(): void
     {
-        static::addGlobalScope(new TenantScope());
+        static::addGlobalScope(new TenantScope);
 
         static::creating(function (self $model) {
             if (empty($model->tenant_id)) {
@@ -20,7 +20,7 @@ trait HasTenant
 
                 if ($tenantId === null) {
                     throw new \RuntimeException(
-                        'Não é possível criar '.class_basename($model).' sem tenant_id no contexto.'
+                        'Não é possível criar ' . class_basename($model) . ' sem tenant_id no contexto.',
                     );
                 }
 
@@ -29,6 +29,7 @@ trait HasTenant
         });
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

@@ -8,7 +8,6 @@
  *
  * Uso: php scripts/check-critical-coverage.php coverage/coverage.json
  */
-
 $coverageFile = $argv[1] ?? 'coverage/coverage.json';
 
 if (! file_exists($coverageFile)) {
@@ -29,8 +28,8 @@ if ($data === null) {
  * Chave: padrão de namespace/caminho. Valor: cobertura mínima em %.
  */
 $criticalDomains = [
-    'App\\Models\\Scopes\\TenantScope'       => 100,
-    'App\\Models\\Concerns\\HasTenant'       => 100,
+    'App\\Models\\Scopes\\TenantScope' => 100,
+    'App\\Models\\Concerns\\HasTenant' => 100,
     'App\\Http\\Middleware\\SetTenantContext' => 100,
 ];
 
@@ -77,7 +76,7 @@ function findClassCoverage(array $data, string $className): ?float
         $normalizedClass = str_replace(['App/', 'app/'], '', $file);
         $normalizedClass = str_replace('/', '\\', $normalizedClass);
         $normalizedClass = preg_replace('/\.php$/', '', $normalizedClass);
-        $normalizedClass = 'App\\'.$normalizedClass;
+        $normalizedClass = 'App\\' . $normalizedClass;
 
         if (str_contains($normalizedClass, str_replace('App\\', '', $className))) {
             $covered = $fileData['summary']['coveredLines'] ?? 0;

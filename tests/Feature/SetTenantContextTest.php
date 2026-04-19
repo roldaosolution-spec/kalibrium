@@ -1,8 +1,8 @@
 <?php
 
-use App\Support\TenantContext;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 
 // ──────────────────────────────────────────────────────────────────────────────

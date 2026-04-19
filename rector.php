@@ -8,8 +8,8 @@ use Rector\Set\ValueObject\SetList;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__.'/app',
-        __DIR__.'/tests',
+        __DIR__ . '/app',
+        __DIR__ . '/tests',
     ])
     ->withSets([
         LevelSetList::UP_TO_PHP_84,
@@ -18,8 +18,4 @@ return RectorConfig::configure()
         SetList::EARLY_RETURN,
         SetList::TYPE_DECLARATION,
     ])
-    ->withPhpSets(php84: true)
-    ->withSkip([
-        // Mantém compatibilidade com Eloquent magic
-        \Rector\Php80\Rector\FunctionLike\UnionTypesRector::class,
-    ]);
+    ->withPhpSets(php84: true);

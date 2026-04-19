@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use RuntimeException;
 
-/** Eloquent global scope that adds a WHERE tenant_id = ? clause to every query on HasTenant models. */
+/** @implements Scope<Model> */
 class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
@@ -17,11 +17,11 @@ class TenantScope implements Scope
 
         if ($tenantId === null) {
             throw new RuntimeException(
-                'TenantScope aplicado sem tenant_id no contexto. '.
-                'Certifique-se de que SetTenantContext middleware foi executado.'
+                'TenantScope aplicado sem tenant_id no contexto. ' .
+                'Certifique-se de que SetTenantContext middleware foi executado.',
             );
         }
 
-        $builder->where($model->getTable().'.tenant_id', $tenantId);
+        $builder->where($model->getTable() . '.tenant_id', $tenantId);
     }
 }

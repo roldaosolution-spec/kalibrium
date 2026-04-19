@@ -1,13 +1,11 @@
 <?php
 
-use Illuminate\Support\Str;
-
 $redisBase = [
-    'url'      => env('REDIS_URL'),
-    'host'     => env('REDIS_HOST', '127.0.0.1'),
+    'url' => env('REDIS_URL'),
+    'host' => env('REDIS_HOST', '127.0.0.1'),
     'username' => env('REDIS_USERNAME'),
     'password' => env('REDIS_PASSWORD'),
-    'port'     => env('REDIS_PORT', '6379'),
+    'port' => env('REDIS_PORT', '6379'),
 ];
 
 return [
@@ -50,7 +48,7 @@ return [
         'client' => env('REDIS_CLIENT', 'predis'),
 
         'default' => array_merge($redisBase, ['database' => env('REDIS_DB', '0')]),
-        'cache'   => array_merge($redisBase, ['database' => env('REDIS_CACHE_DB', '1')]),
+        'cache' => array_merge($redisBase, ['database' => env('REDIS_CACHE_DB', '1')]),
         'session' => array_merge($redisBase, ['database' => env('REDIS_SESSION_DB', '2')]),
     ],
 ];

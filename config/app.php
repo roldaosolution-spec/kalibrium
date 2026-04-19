@@ -1,8 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
-
 return [
     'name' => env('APP_NAME', 'Kalibrium'),
     'env' => env('APP_ENV', 'production'),
@@ -16,7 +13,7 @@ return [
     'key' => env('APP_KEY'),
     'previous_keys' => [
         ...array_filter(
-            explode(',', env('APP_PREVIOUS_KEYS', ''))
+            explode(',', env('APP_PREVIOUS_KEYS', '')),
         ),
     ],
     'maintenance' => [

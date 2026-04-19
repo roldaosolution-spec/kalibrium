@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Support\TenantContext;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Database\Seeder;
 
 class TenantSeeder extends Seeder

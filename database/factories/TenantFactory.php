@@ -14,7 +14,7 @@ class TenantFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => Str::slug($name).'-'.Str::random(6),
+            'slug' => Str::slug($name) . '-' . Str::random(6),
             'cnpj' => fake('pt_BR')->cnpj(),
             'status' => 'active',
             'settings' => null,

@@ -78,10 +78,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::unprepared("DROP POLICY IF EXISTS tenant_isolation ON audits");
+        DB::unprepared('DROP POLICY IF EXISTS tenant_isolation ON audits');
         DB::unprepared('ALTER TABLE audits DISABLE ROW LEVEL SECURITY');
 
-        DB::unprepared("DROP POLICY IF EXISTS tenant_isolation ON users");
+        DB::unprepared('DROP POLICY IF EXISTS tenant_isolation ON users');
         DB::unprepared('ALTER TABLE users DISABLE ROW LEVEL SECURITY');
 
         DB::unprepared("
