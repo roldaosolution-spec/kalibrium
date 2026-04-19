@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      DB_HOST: pgsql
+      DB_PORT: 5432
+      DB_DATABASE: kalibrium
+      DB_USERNAME: kalibrium
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  pgsql:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: kalibrium
+      POSTGRES_USER: kalibrium
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgsql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalibrium -d kalibrium"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    command: redis-server --requirepass secret
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "secret", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgsql_test:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: kalibrium_test
+      POSTGRES_USER: kalibrium
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalibrium -d kalibrium_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgsql_data:
+  redis_data:

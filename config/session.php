@@ -4,9 +4,9 @@ use Illuminate\Support\Str;
 
 return [
     'driver' => env('SESSION_DRIVER', 'redis'),
-    'lifetime' => env('SESSION_LIFETIME', 345600), // 4 dias em minutos (offline-first)
+    'lifetime' => env('SESSION_LIFETIME', 5760), // 4 dias em minutos: 4 × 24 × 60 = 5760
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => env('SESSION_ENCRYPT', true),
     'files' => storage_path('framework/sessions'),
     'connection' => env('SESSION_CONNECTION', 'session'),
     'table' => env('SESSION_TABLE', 'sessions'),
