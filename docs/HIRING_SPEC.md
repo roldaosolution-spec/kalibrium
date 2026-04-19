@@ -37,3 +37,19 @@
 Use skill `paperclip-create-agent` para cada um. Após criação, o board (roldao) já aprovou antecipadamente — aprovação automática.
 
 Todos com heartbeat habilitado (intervalSec 180, cooldownSec 10, maxConcurrentRuns 1).
+
+---
+
+## Adendo (Board directive — 19/04/2026): 2 NOVOS agentes críticos
+
+### 6. Build Verifier (`build-verifier`)
+- **Role**: qa
+- **Título**: Verificador de Build End-to-End
+- **Modelo**: claude-sonnet-4-6
+- **Capacidades**: Executa **build real do projeto** em cada PR, em container Docker limpo. Sequência: `composer install`, `npm ci`, `docker compose build`, `migrations`, `suite de testes`, `npm run build`. Se QUALQUER comando retornar exit code != 0, comenta "❌ build-verifier: <erro>" no PR e bloqueia merge. É o ÚNICO agente que executa o projeto de ponta-a-ponta; todos outros só leem código. Trabalha em contexto isolado.
+
+### 7. CI Guardian (`ci-guardian`)
+- **Role**: qa
+- **Título**: Monitor de CI/CD em tempo real
+- **Modelo**: claude-sonnet-4-6
+- **Capacidades**: A cada heartbeat roda `gh run list --limit 20 --json conclusion,headBranch,displayTitle`. Se qualquer run em `main` estiver `failure`, cria issue **P0** `ci-red: <razão>` e atribui ao Fixer. Pausa criação de novas slices (comenta no CEO) até CI voltar verde por 15min consecutivos. Valida SHAs de actions externas antes de mergearem (`gh api /repos/<owner>/<repo>/commits/<sha>`). Trabalha em contexto isolado.
