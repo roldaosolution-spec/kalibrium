@@ -1,61 +1,111 @@
 # AGENTS.md — Kalibrium
 
-## Idioma (OBRIGATÓRIO — aplica a TODOS os agentes)
-
-- Toda comunicação com o board e entre agentes: **Português Brasileiro** (PT-BR).
-- Issues, PRs, comentários, descrições de tarefas: **PT-BR**.
-- Docs (PRD, ADRs, specs, docstrings): **PT-BR**.
-- Código-fonte (nomes de variáveis, classes, métodos): **inglês**.
-- Commit messages e nomes de branch: **inglês** (Conventional Commits).
+## Idioma (OBRIGATÓRIO)
+- Comunicação entre agentes + board: **PT-BR**
+- Issues, PRs, comentários, descrições: **PT-BR**
+- Docs (ADRs, specs, docstrings "why"): **PT-BR**
+- Código-fonte (nomes, classes, métodos): **inglês**
+- Commits + branches: **inglês** (Conventional Commits)
 
 ## Fonte-de-verdade
-1. **PRD** — `docs/PRD.md` (escopo, features, stack, constraints)
-2. **ADRs** — `docs/adr/*.md` (decisões arquiteturais)
-3. **Hiring Spec** — `docs/HIRING_SPEC.md` (agentes a contratar)
-4. **Slices** — `docs/slices/*.md` (especificações técnicas por slice)
-5. **UX Flows** — `docs/ux/*.md` (fluxos desenhados pelo UX Designer)
+1. `docs/PRD.md` — escopo, features, stack
+2. `docs/adr/*.md` — decisões arquiteturais aceitas
+3. `docs/HIRING_SPEC.md` — agentes a contratar
+4. `docs/runbooks/ENVIRONMENT.md` — ambiente do VPS (o que já existe)
+5. `docs/runbooks/AUTONOMY.md` — regras de autonomia
 
-## Time (19 agentes-alvo)
-- **1 CEO** (Opus 4.6) — estratégia, delegação, decisões de produto
-- **1 Tech Lead / Planner** — quebra épicos em slices técnicas
-- **1 UX Designer** — fluxos de usuário antes do dev
-- **1 Implementer** — escreve o código
-- **1 Fixer** — aplica correções após findings
-- **1 PR Approver** — revisa e **merga automaticamente** em `main`
-- **13 Auditores especialistas** (contexto isolado entre si):
-  - Arquiteto, Segurança, Performance, Testes, Quality
-  - Laravel, Frontend-PWA, Docs, Compliance, DevOps
-  - **Metrologista ISO 17025**, **Fiscalista BR**, **Red Team**
+## Time (21 agentes — com 2 novos críticos)
+- 1 CEO (Opus 4.6)
+- 1 Tech Lead
+- 1 UX Designer
+- 1 Implementer
+- 1 Fixer
+- 1 PR-Approver
+- 1 **Build Verifier** (novo — roda `composer install`, `npm install`, `docker compose build` de verdade)
+- 1 **CI Guardian** (novo — monitora Actions; bloqueia slices se CI vermelho)
+- 13 auditores especialistas (incluindo metrologista, fiscalista, red team)
 
-## Regras de processo
+---
 
-1. Tech Lead recebe feature do PRD → cria `docs/slices/NNN-name.md`
-2. UX Designer desenha fluxo → `docs/ux/NNN-flow.md` (em paralelo)
-3. Implementer cria branch `feat/slice-NNN-kebab`, codifica com testes
-4. Implementer abre PR → auditores (13) rodam em paralelo em contexto isolado
-5. Qualquer finding crítico → Fixer aplica correções → re-audit (loop infinito até zero findings)
-6. PR-Approver revisa PR e CI → **mergeia automaticamente** em `main` com squash
-7. PR-Approver comenta em PT-BR no PR e notifica CEO
+# 🛑 HARD GATES — NUNCA IGNORAR
 
-## Auto-merge (NOVO)
-- PR-Approver **NÃO** espera aprovação humana.
-- Se auditoria passou + CI verde + PR atualizado com main → `gh pr merge --squash --delete-branch`.
-- Humano só é chamado se houver ambiguidade de produto (não de código).
+## Gate 1 — Implementer antes de `git push`
 
-## Padrão de commit
-`type(scope): mensagem em inglês` — ex: `feat(tenant): add multi-tenant isolation with RLS`
+**OBRIGATÓRIO rodar localmente:**
+```bash
+composer install --no-interaction       # backend deps
+npm ci                                   # frontend deps
+docker compose -f docker-compose.yml up -d --wait  # infra sobe
+php artisan migrate --force              # migrations ok
+php artisan test --parallel              # suite passa
+npm run build                            # frontend builda
+```
 
-Tipos: feat, fix, chore, docs, test, refactor, perf, ci, build
+**Se qualquer comando retornar exit code != 0:**
+- **NÃO push**. Crie issue pra você mesmo `fix: <descrição>` e resolva antes.
+- Nunca "vou commitar e a CI vai me dizer" — isso gasta tokens e tempo.
 
-## Branches
-- `main` — produção (só PR-Approver merga automaticamente)
-- `feat/slice-NNN-descricao` — trabalho por slice
+## Gate 2 — Build Verifier (agente novo)
 
-## Ao começar qualquer tarefa
-1. Ler `docs/PRD.md` (se ainda não leu)
-2. Ler ADRs aceitos em `docs/adr/*.md`
-3. Verificar a issue/slice ativa atribuída a você
-4. Se dúvida de produto: comentar em PT-BR, marcar `@ceo`
+- Roda em cada PR **em container limpo** (sem cache)
+- Executa a mesma sequência do Gate 1 + build Docker production
+- Se falhar, **bloqueia** merge automaticamente (comentário "❌ build-verifier: <erro>")
+- É o único agente que executa o projeto de ponta-a-ponta
 
-## Token GitHub
-`gh` está autenticado com PAT em `$HOME/.git-credentials`. Use `gh auth status` pra validar.
+## Gate 3 — CI Guardian (agente novo)
+
+- Monitora `gh run list --limit 20 --json conclusion,headBranch` a cada heartbeat
+- Se qualquer run em `main` estiver `failure` → cria issue **P0** no Paperclip `ci-red: <razão>` e delega ao Fixer
+- **Pausa** criação de novas slices (comenta no CEO) até CI verde
+- Verifica a cada 3min; se `main` verde por 15min seguidos, libera novas slices
+
+## Gate 4 — Auditor-DevOps (reforço)
+
+Além do estático, ele DEVE:
+- `gh pr checks <pr> --required` — todos OK?
+- Validar que workflows **realmente executam** (não só "linter OK" — tem que ter `composer install` + test real)
+- Validar SHAs de actions externas existem: `gh api /repos/<owner>/<repo>/commits/<sha>`
+- Finding automático se CI vermelho
+
+## Gate 5 — PR-Approver (reforço — AUTO_MERGE)
+
+**Pré-merge check MATA-MUSCA:**
+```bash
+# 1. Todos os 13+ auditores aprovaram?
+gh pr view <n> --json reviews -q '.reviews | map(select(.state=="APPROVED")) | length'  # >= 13
+
+# 2. CI do PR está verde?
+gh pr checks <n>  # todos success
+
+# 3. Build Verifier comentou "✅ build ok"?
+gh pr view <n> --json comments | grep -q "build-verifier: OK"
+
+# 4. Branch atualizada com main?
+gh pr update-branch <n>
+
+# 5. Re-roda CI pra confirmar pós-rebase
+gh pr checks <n> --watch
+
+# SÓ ENTÃO mergear
+gh pr merge <n> --squash --delete-branch
+```
+
+**Se QUALQUER dos 5 falhar: NÃO merga. Comenta PT-BR explicando o que falta.**
+
+---
+
+## Workflow completo por slice
+
+```
+Tech Lead cria spec → Implementer codifica
+  → Gate 1 local (build verifier local) → push
+  → Gate 2 Build Verifier em container limpo no PR
+  → 13 auditores em paralelo
+  → Gate 4 Auditor-DevOps checa CI/SHAs
+  → Findings → Fixer → loop até zero
+  → Gate 5 PR-Approver (5 checks mata-musca)
+  → merge em main
+  → Gate 3 CI Guardian confirma main verde
+```
+
+**Qualquer falha em qualquer gate = merge bloqueado. Zero tolerância.**
