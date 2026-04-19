@@ -169,7 +169,7 @@ jobs:
           DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
 
       - name: Executar testes (Pest) com cobertura
-        run: ./vendor/bin/pest --coverage-json=coverage/coverage.json --min=80
+        run: ./vendor/bin/pest --coverage-clover=coverage/clover.xml --min=80
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -182,7 +182,7 @@ jobs:
           SESSION_DRIVER: array
 
       - name: Verificar cobertura de domínios críticos (ADR-0017)
-        run: php scripts/check-critical-coverage.php coverage/coverage.json
+        run: php scripts/check-critical-coverage.php coverage/clover.xml
 
       - name: Upload artefato de cobertura
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
