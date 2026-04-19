@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    level: 8
+
+    # Ignora apenas falsos positivos conhecidos do Laravel — não adicionar sem justificativa
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
