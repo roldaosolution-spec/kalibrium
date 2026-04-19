@@ -39,7 +39,7 @@ class ClientFactory extends Factory
         $n = [];
 
         for ($i = 0; $i < 12; $i++) {
-            $n[] = rand(0, 9);
+            $n[] = $this->faker->numberBetween(0, 9);
         }
 
         $weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];

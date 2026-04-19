@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Auth\TenantAgnosticUserProvider;
+use App\Models\Calibration;
 use App\Models\Client;
 use App\Models\Instrument;
 use App\Models\PersonalAccessToken;
 use App\Models\Procedure;
+use App\Models\ServiceOrder;
 use App\Models\Standard;
 use App\Models\TechnicianCompetency;
 use App\Models\User;
+use App\Policies\CalibrationPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\InstrumentPolicy;
 use App\Policies\ProcedurePolicy;
+use App\Policies\ServiceOrderPolicy;
 use App\Policies\StandardPolicy;
 use App\Policies\TechnicianCompetencyPolicy;
 use App\Policies\UserPolicy;
@@ -29,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     #[\Override]
     public function register(): void {}
 
+    #[\Override]
     public function boot(): void
     {
         // Register the tenant-agnostic auth provider so authentication bypasses
@@ -41,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Standard::class, StandardPolicy::class);
         Gate::policy(Procedure::class, ProcedurePolicy::class);
         Gate::policy(TechnicianCompetency::class, TechnicianCompetencyPolicy::class);
+        Gate::policy(ServiceOrder::class, ServiceOrderPolicy::class);
+        Gate::policy(Calibration::class, CalibrationPolicy::class);
 
         // Use custom PersonalAccessToken that bypasses TenantScope when resolving
         // the tokenable owner during Sanctum authentication.

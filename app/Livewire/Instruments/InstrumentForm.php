@@ -7,6 +7,7 @@ namespace App\Livewire\Instruments;
 use App\Enums\Domain;
 use App\Models\Client;
 use App\Models\Instrument;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -53,7 +54,7 @@ class InstrumentForm extends Component
             'range_min' => ['nullable', 'numeric'],
             'range_max' => ['nullable', 'numeric', 'gte:range_min'],
             'resolution' => ['nullable', 'numeric', 'min:0'],
-            'domain' => ['required', 'string', 'in:' . implode(',', Domain::values())],
+            'domain' => ['required', Rule::enum(Domain::class)],
             'client_id' => ['nullable', 'uuid', 'exists:clients,id'],
         ]);
 
