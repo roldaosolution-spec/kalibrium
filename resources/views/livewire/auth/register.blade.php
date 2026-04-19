@@ -19,9 +19,11 @@
             <label for="password_confirmation">Confirmar senha</label>
             <input wire:model="password_confirmation" id="password_confirmation" type="password">
         </div>
-        <input wire:model="tenant_id" type="hidden" id="tenant_id">
-        <input wire:model="role" type="hidden" id="role">
-        <button type="submit">Cadastrar</button>
+        @error('tenant_id') <span>{{ $message }}</span> @enderror
+        <button type="submit" wire:loading.attr="disabled">
+            <span wire:loading.remove>Cadastrar</span>
+            <span wire:loading>Aguarde...</span>
+        </button>
     </form>
     <a href="/login">Já tenho conta</a>
 </div>

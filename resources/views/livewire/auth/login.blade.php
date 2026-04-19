@@ -15,7 +15,10 @@
                 <input wire:model="remember" type="checkbox"> Lembrar-me
             </label>
         </div>
-        <button type="submit">Entrar</button>
+        <button type="submit" wire:loading.attr="disabled">
+            <span wire:loading.remove>Entrar</span>
+            <span wire:loading>Aguarde...</span>
+        </button>
     </form>
     <a href="/register">Criar conta</a>
 </div>

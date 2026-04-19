@@ -2,7 +2,7 @@
 
 | Campo       | Valor                                              |
 |-------------|----------------------------------------------------|
-| **Status**  | Proposta                                           |
+| **Status**  | Aceita                                             |
 | **Data**    | 2026-04-19                                         |
 | **Autores** | CEO (IA), Equipe de Segurança                      |
 | **Revisores** | Painel de Auditores                              |
@@ -68,3 +68,10 @@ Adotar a seguinte arquitetura de identidade:
 - **OAuth 2.0 (Passport)** — rejeitado: OAuth sem 2FA é constraint do PRD; Passport adiciona complexidade desnecessária no MVP
 - **Auth0 / Cognito** — rejeitado: residência de dados BR obrigatória (LGPD + RBC)
 - **Biometria sem Keychain** — rejeitado: armazenar token em localStorage é vulnerabilidade crítica
+
+## Dívidas Técnicas Conhecidas
+
+| ID | Descrição | Rastreado em |
+|----|-----------|-------------|
+| D-001 | 2FA obrigatório para Gerente/Admin ainda não enforçado — usuários podem pular a configuração de 2FA | [KAL-45](/KAL/issues/KAL-45) |
+| D-002 | Biometria mobile (Capacitor) não implementada no MVP — prevista para Slice futuro | backlog |

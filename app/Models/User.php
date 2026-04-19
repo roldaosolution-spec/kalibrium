@@ -7,7 +7,10 @@ namespace App\Models;
 use App\Enums\Role;
 use App\Models\Concerns\HasTenant;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -22,10 +25,10 @@ use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
  * @property string|null $tenant_id
  * @property Role $role
  */
-class User extends Authenticatable implements AuditableContract
+class User extends Authenticatable implements AuditableContract, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use Auditable, HasApiTokens, HasFactory, HasTenant, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use Auditable, HasApiTokens, HasFactory, HasTenant, Notifiable, Prunable, SoftDeletes, TwoFactorAuthenticatable;
 
     protected $fillable = [
         'name',
@@ -51,5 +54,12 @@ class User extends Authenticatable implements AuditableContract
             'password' => 'hashed',
             'role' => Role::class,
         ];
+    }
+
+    /** @return Builder<User> */
+    public function prunable(): Builder
+    {
+        // Hard-delete soft-deleted users after 30 days (LGPD Art. 18 VIII — right to erasure)
+        return static::onlyTrashed()->where('deleted_at', '<=', now()->subDays(30));
     }
 }

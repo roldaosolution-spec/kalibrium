@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Auth;
 
+use App\Actions\Fortify\PasswordValidationRules;
 use App\Enums\Role;
 use App\Models\User;
 use App\Support\TenantContext;
@@ -11,25 +12,33 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Register extends Component
 {
+    use PasswordValidationRules;
+
     public string $name = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+
+    #[Locked]
     public string $tenant_id = '';
-    public string $role = Role::Administrativo->value;
+
+    public function mount(string $tenant = ''): void
+    {
+        $this->tenant_id = $tenant;
+    }
 
     public function register(): void
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => $this->passwordRules(),
             'tenant_id' => ['required', 'uuid', 'exists:tenants,id'],
-            'role' => ['required', Rule::enum(Role::class)],
         ]);
 
         TenantContext::set($this->tenant_id);
@@ -39,7 +48,7 @@ class Register extends Component
                 'name' => $this->name,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
-                'role' => $this->role,
+                'role' => Role::Tecnico,
                 'tenant_id' => $this->tenant_id,
             ]);
         } finally {
