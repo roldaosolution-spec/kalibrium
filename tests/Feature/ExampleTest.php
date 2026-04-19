@@ -1,7 +1,7 @@
 <?php
 
-// AC-001-02: Pest executa (mesmo sem testes reais)
-it('retorna HTTP 200 na rota raiz', function () {
+// AC-001-01: artisan serve inicia — rota raiz deve retornar HTTP 200
+it('[AC-001-01] rota raiz retorna HTTP 200', function () {
     $response = $this->get('/');
     $response->assertStatus(200);
 });
