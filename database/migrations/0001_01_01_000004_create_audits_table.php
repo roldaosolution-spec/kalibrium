@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('audits', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->uuid('tenant_id')->nullable()->index();
             $table->string('user_type')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('event');

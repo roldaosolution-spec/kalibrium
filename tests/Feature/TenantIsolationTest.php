@@ -16,4 +16,4 @@ it('[AC-001-03] TenantScope impede acesso a registros de outro tenant', function
     $usersVisibleFromB = User::all();
 
     expect($usersVisibleFromB->pluck('id'))->not->toContain($userA->id);
-})->skip('Requer integração com PostgreSQL — executar no CI');
+});

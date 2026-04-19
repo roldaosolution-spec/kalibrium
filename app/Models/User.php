@@ -16,11 +16,9 @@ class User extends Authenticatable implements AuditableContract
     use Auditable, HasApiTokens, HasFactory, HasTenant, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'name',
         'email',
         'password',
-        'role',
     ];
 
     protected $hidden = [
