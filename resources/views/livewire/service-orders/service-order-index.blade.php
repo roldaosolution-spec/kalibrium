@@ -21,15 +21,16 @@
     </div>
 
     <table>
+        <caption>Lista de ordens de serviço</caption>
         <thead>
             <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Modo</th>
-                <th>Status</th>
-                <th>SLA</th>
-                <th>Técnico</th>
-                <th>Ações</th>
+                <th scope="col">Número</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Modo</th>
+                <th scope="col">Status</th>
+                <th scope="col">SLA</th>
+                <th scope="col">Técnico</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -42,7 +43,7 @@
                     <td>{{ $os->sla_date?->format('d/m/Y') ?? '—' }}</td>
                     <td>{{ $os->assignedTechnician?->name ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('service-orders.show', $os->id) }}" wire:navigate>Ver</a>
+                        <a href="{{ route('service-orders.show', $os->id) }}" wire:navigate aria-label="Ver ordem de serviço {{ $os->number }}">Ver</a>
                     </td>
                 </tr>
             @empty

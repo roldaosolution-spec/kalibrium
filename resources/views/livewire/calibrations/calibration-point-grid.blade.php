@@ -1,14 +1,15 @@
 <div>
     <table>
+        <caption>Pontos de calibração</caption>
         <thead>
             <tr>
-                <th>Nominal</th>
-                <th>Medido</th>
-                <th>Unidade</th>
-                <th>Desvio</th>
-                <th>Incerteza</th>
-                <th>Resultado</th>
-                <th>Ações</th>
+                <th scope="col">Nominal</th>
+                <th scope="col">Medido</th>
+                <th scope="col">Unidade</th>
+                <th scope="col">Desvio</th>
+                <th scope="col">Incerteza</th>
+                <th scope="col">Resultado</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -23,7 +24,8 @@
                     <td>
                         @can('update', $calibration)
                             <button wire:click="deletePoint('{{ $point->id }}')"
-                                wire:confirm="Remover este ponto?">
+                                wire:confirm="Remover este ponto?"
+                                aria-label="Remover ponto de calibração nominal {{ $point->nominal_value }}">
                                 Remover
                             </button>
                         @endcan

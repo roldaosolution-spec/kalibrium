@@ -21,14 +21,15 @@
     </div>
 
     <table>
+        <caption>Lista de instrumentos</caption>
         <thead>
             <tr>
-                <th>Nº Série</th>
-                <th>Tipo</th>
-                <th>Domínio</th>
-                <th>Faixa</th>
-                <th>Cliente</th>
-                <th>Ações</th>
+                <th scope="col">Nº Série</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Domínio</th>
+                <th scope="col">Faixa</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -47,11 +48,12 @@
                     <td>{{ $instrument->client?->name ?? '—' }}</td>
                     <td>
                         @can('update', $instrument)
-                            <a href="{{ route('instruments.edit', $instrument->id) }}" wire:navigate>Editar</a>
+                            <a href="{{ route('instruments.edit', $instrument->id) }}" wire:navigate aria-label="Editar instrumento {{ $instrument->serial_number }}">Editar</a>
                         @endcan
                         @can('delete', $instrument)
                             <button wire:click="delete('{{ $instrument->id }}')"
-                                wire:confirm="Confirma a exclusão do instrumento {{ $instrument->serial_number }}?">
+                                wire:confirm="Confirma a exclusão do instrumento {{ $instrument->serial_number }}?"
+                                aria-label="Excluir instrumento {{ $instrument->serial_number }}">
                                 Excluir
                             </button>
                         @endcan

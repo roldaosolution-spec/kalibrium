@@ -15,14 +15,15 @@
     </div>
 
     <table>
+        <caption>Lista de clientes</caption>
         <thead>
             <tr>
-                <th>Nome</th>
-                <th>CNPJ</th>
-                <th>Contato</th>
-                <th>Telefone</th>
-                <th>E-mail</th>
-                <th>Ações</th>
+                <th scope="col">Nome</th>
+                <th scope="col">CNPJ</th>
+                <th scope="col">Contato</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -35,11 +36,12 @@
                     <td>{{ $client->email ?? '—' }}</td>
                     <td>
                         @can('update', $client)
-                            <a href="{{ route('clients.edit', $client->id) }}" wire:navigate>Editar</a>
+                            <a href="{{ route('clients.edit', $client->id) }}" wire:navigate aria-label="Editar cliente {{ $client->name }}">Editar</a>
                         @endcan
                         @can('delete', $client)
                             <button wire:click="delete('{{ $client->id }}')"
-                                wire:confirm="Confirma a exclusão do cliente {{ $client->name }}?">
+                                wire:confirm="Confirma a exclusão do cliente {{ $client->name }}?"
+                                aria-label="Excluir cliente {{ $client->name }}">
                                 Excluir
                             </button>
                         @endcan

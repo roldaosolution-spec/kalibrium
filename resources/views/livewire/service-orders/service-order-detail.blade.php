@@ -26,12 +26,13 @@
 
     <h2>Calibrações</h2>
     <table>
+        <caption>Calibrações da ordem de serviço</caption>
         <thead>
             <tr>
-                <th>Instrumento</th>
-                <th>Status</th>
-                <th>Certificado</th>
-                <th>Ações</th>
+                <th scope="col">Instrumento</th>
+                <th scope="col">Status</th>
+                <th scope="col">Certificado</th>
+                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -41,7 +42,7 @@
                     <td>{{ $calibration->status->label() }}</td>
                     <td>{{ $calibration->certificate_number ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('calibrations.show', $calibration->id) }}" wire:navigate>Ver</a>
+                        <a href="{{ route('calibrations.show', $calibration->id) }}" wire:navigate aria-label="Ver calibração do instrumento {{ $calibration->instrument?->serial_number ?? 'desconhecido' }}">Ver</a>
                     </td>
                 </tr>
             @empty
