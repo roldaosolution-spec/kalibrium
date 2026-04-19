@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use OwenIt\Auditing\AuditingServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    OwenIt\Auditing\AuditingServiceProvider::class,
+    AppServiceProvider::class,
+    AuditingServiceProvider::class,
 ];

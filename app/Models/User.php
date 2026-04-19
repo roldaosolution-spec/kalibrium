@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Concerns\HasTenant;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,8 +14,14 @@ use Laravel\Sanctum\HasApiTokens;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
+/**
+ * Tenant-scoped user model. All Eloquent queries are automatically filtered to the current tenant.
+ *
+ * @property string|null $tenant_id
+ */
 class User extends Authenticatable implements AuditableContract
 {
+    /** @use HasFactory<UserFactory> */
     use Auditable, HasApiTokens, HasFactory, HasTenant, Notifiable, SoftDeletes;
 
     protected $fillable = [
@@ -28,6 +37,7 @@ class User extends Authenticatable implements AuditableContract
         'two_factor_recovery_codes',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

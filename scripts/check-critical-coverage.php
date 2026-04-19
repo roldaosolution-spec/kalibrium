@@ -1,60 +1,58 @@
 #!/usr/bin/env php
 <?php
 
+declare(strict_types=1);
+
 /**
  * Verifica cobertura mínima nos domínios críticos definidos em ADR-0017.
- * Executado no CI após pest --coverage para garantir que domínios críticos
- * atingem 100% de cobertura, não apenas o piso global de 80%.
+ * Executado no CI após pest --coverage-clover para garantir que domínios
+ * críticos atingem 100% de cobertura, não apenas o piso global de 80%.
  *
- * Uso: php scripts/check-critical-coverage.php coverage/coverage.json
+ * Uso: php scripts/check-critical-coverage.php coverage/clover.xml
  */
-
-$coverageFile = $argv[1] ?? 'coverage/coverage.json';
+$coverageFile = $argv[1] ?? 'coverage/clover.xml';
 
 if (! file_exists($coverageFile)) {
     echo "Arquivo de cobertura não encontrado: {$coverageFile}\n";
-    echo "Execute: ./vendor/bin/pest --coverage-json=coverage/coverage.json\n";
+    echo "Execute: ./vendor/bin/pest --coverage-clover=coverage/clover.xml\n";
     exit(1);
 }
 
-$data = json_decode(file_get_contents($coverageFile), true);
+$xml = simplexml_load_file($coverageFile);
 
-if ($data === null) {
-    echo "Erro ao parsear o arquivo de cobertura.\n";
+if ($xml === false) {
+    echo "Erro ao parsear o arquivo de cobertura XML.\n";
     exit(1);
 }
 
 /**
  * Domínios críticos e cobertura mínima exigida (ADR-0017).
- * Chave: padrão de namespace/caminho. Valor: cobertura mínima em %.
+ * Chave: fragmento de caminho do arquivo. Valor: cobertura mínima em %.
  */
 $criticalDomains = [
-    'App\\Models\\Scopes\\TenantScope'       => 100,
-    'App\\Models\\Concerns\\HasTenant'       => 100,
-    'App\\Http\\Middleware\\SetTenantContext' => 100,
+    'Models/Scopes/TenantScope.php' => 100,
+    'Models/Concerns/HasTenant.php' => 100,
+    'Http/Middleware/SetTenantContext.php' => 100,
 ];
 
 $failures = [];
-$summary = [];
 
-foreach ($criticalDomains as $class => $minCoverage) {
-    $covered = findClassCoverage($data, $class);
+foreach ($criticalDomains as $pathFragment => $minCoverage) {
+    $covered = findFileCoverage($xml, $pathFragment);
 
     if ($covered === null) {
-        $failures[] = "AUSENTE: {$class} — não encontrada na cobertura (cobertura mínima: {$minCoverage}%)";
-        $summary[] = ['class' => $class, 'coverage' => 0, 'min' => $minCoverage, 'pass' => false];
+        $failures[] = "AUSENTE: {$pathFragment} — não encontrada na cobertura (mínimo: {$minCoverage}%)";
+        echo "[AUSENTE] {$pathFragment}: não encontrada\n";
         continue;
     }
 
     $pass = $covered >= $minCoverage;
     $status = $pass ? 'PASS' : 'FAIL';
-    $summary[] = ['class' => $class, 'coverage' => $covered, 'min' => $minCoverage, 'pass' => $pass];
+    echo "[{$status}] {$pathFragment}: {$covered}% (mínimo: {$minCoverage}%)\n";
 
     if (! $pass) {
-        $failures[] = "FAIL: {$class} — cobertura {$covered}% < mínimo {$minCoverage}%";
+        $failures[] = "FAIL: {$pathFragment} — cobertura {$covered}% < mínimo {$minCoverage}%";
     }
-
-    echo "[{$status}] {$class}: {$covered}% (mínimo: {$minCoverage}%)\n";
 }
 
 if (count($failures) > 0) {
@@ -63,7 +61,6 @@ if (count($failures) > 0) {
     foreach ($failures as $failure) {
         echo "  {$failure}\n";
     }
-
     echo "\nDomínios críticos não atingiram a cobertura mínima. Build bloqueado.\n";
     exit(1);
 }
@@ -71,24 +68,39 @@ if (count($failures) > 0) {
 echo "\nTodos os domínios críticos atingiram a cobertura mínima exigida.\n";
 exit(0);
 
-function findClassCoverage(array $data, string $className): ?float
+function findFileCoverage(SimpleXMLElement $xml, string $pathFragment): ?float
 {
-    foreach ($data['files'] ?? [] as $file => $fileData) {
-        $normalizedClass = str_replace(['App/', 'app/'], '', $file);
-        $normalizedClass = str_replace('/', '\\', $normalizedClass);
-        $normalizedClass = preg_replace('/\.php$/', '', $normalizedClass);
-        $normalizedClass = 'App\\'.$normalizedClass;
+    // PHPUnit Clover XML nests files inside <package> elements (one per namespace).
+    // Search both top-level <file> nodes and those inside <package> children.
+    $candidates = array_merge(
+        iterator_to_array($xml->project->file ?? [], false),
+        ...array_map(
+            fn ($pkg) => iterator_to_array($pkg->file ?? [], false),
+            iterator_to_array($xml->project->package ?? [], false),
+        ),
+    );
 
-        if (str_contains($normalizedClass, str_replace('App\\', '', $className))) {
-            $covered = $fileData['summary']['coveredLines'] ?? 0;
-            $total = $fileData['summary']['executableLines'] ?? 0;
+    foreach ($candidates as $file) {
+        $name = (string) $file['name'];
 
-            if ($total === 0) {
-                return 100.0;
-            }
-
-            return round(($covered / $total) * 100, 2);
+        if (! str_contains($name, $pathFragment)) {
+            continue;
         }
+
+        $metrics = $file->metrics;
+
+        if ($metrics === null) {
+            return null;
+        }
+
+        $total = (int) $metrics['statements'];
+        $covered = (int) $metrics['coveredstatements'];
+
+        if ($total === 0) {
+            return 100.0;
+        }
+
+        return round(($covered / $total) * 100, 2);
     }
 
     return null;

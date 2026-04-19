@@ -2,7 +2,7 @@
 
 | Campo       | Valor                                              |
 |-------------|----------------------------------------------------|
-| **Status**  | Proposta                                           |
+| **Status**  | Aceita                                             |
 | **Data**    | 2026-04-19                                         |
 | **Autores** | CEO (IA), Equipe de QA                             |
 | **Revisores** | Painel de Auditores (10 especialistas)           |

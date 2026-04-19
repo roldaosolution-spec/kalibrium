@@ -24,7 +24,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'user_type']);
-            $table->index(['auditable_type', 'auditable_id']);
         });
     }
 

@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@cf4cade2721270509d5b1c766ab3549210a39a2e # v2.32.0
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2.37.0
         with:
           php-version: "8.4"
           extensions: pdo, pdo_pgsql, redis, pcntl, bcmath, intl
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@cf4cade2721270509d5b1c766ab3549210a39a2e # v2.32.0
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2.37.0
         with:
           php-version: "8.4"
           extensions: pdo, pdo_pgsql, redis, pcntl, bcmath, intl
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@cf4cade2721270509d5b1c766ab3549210a39a2e # v2.32.0
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2.37.0
         with:
           php-version: "8.4"
           extensions: pdo, pdo_pgsql, pcntl, bcmath, intl
@@ -101,6 +101,7 @@ jobs:
       pgsql:
         image: postgres:18-alpine
         env:
+          # CI only — not for production. Production credentials must use GitHub Secrets.
           POSTGRES_DB: kalibrium_test
           POSTGRES_USER: kalibrium
           POSTGRES_PASSWORD: secret
@@ -126,7 +127,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@cf4cade2721270509d5b1c766ab3549210a39a2e # v2.32.0
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2.37.0
         with:
           php-version: "8.4"
           extensions: pdo, pdo_pgsql, redis, pcntl, bcmath, intl
@@ -150,8 +151,8 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           SESSION_ENCRYPT: "true"
@@ -164,24 +165,24 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
 
       - name: Executar testes (Pest) com cobertura
-        run: ./vendor/bin/pest --coverage-json=coverage/coverage.json --min=80
+        run: ./vendor/bin/pest --coverage-clover=coverage/clover.xml --min=80
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_DATABASE: kalibrium_test
-          DB_USERNAME: kalibrium
-          DB_PASSWORD: secret
+          DB_USERNAME: kalibrium   # CI only — not for production; use GitHub Secrets instead
+          DB_PASSWORD: secret      # CI only — not for production; use GitHub Secrets instead
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           SESSION_DRIVER: array
 
       - name: Verificar cobertura de domínios críticos (ADR-0017)
-        run: php scripts/check-critical-coverage.php coverage/coverage.json
+        run: php scripts/check-critical-coverage.php coverage/clover.xml
 
       - name: Upload artefato de cobertura
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
