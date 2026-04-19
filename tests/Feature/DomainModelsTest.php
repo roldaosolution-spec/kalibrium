@@ -271,7 +271,7 @@ describe('AC-004-05: políticas de autorização', function (): void {
             ->and($policy->delete($gerente, $client))->toBeTrue();
     });
 
-    it('[AC-004-05] Administrativo pode criar/editar mas não excluir Client', function (): void {
+    it('[AC-004-05] Administrativo pode listar/criar/editar mas não excluir Client', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
 
@@ -280,9 +280,21 @@ describe('AC-004-05: políticas de autorização', function (): void {
 
         $policy = new ClientPolicy;
 
-        expect($policy->create($admin))->toBeTrue()
+        expect($policy->viewAny($admin))->toBeTrue()
+            ->and($policy->create($admin))->toBeTrue()
             ->and($policy->update($admin, $client))->toBeTrue()
             ->and($policy->delete($admin, $client))->toBeFalse();
+    });
+
+    it('[AC-004-05] Tecnico não pode listar Clients (viewAny restrito a gestão)', function (): void {
+        $tenant = Tenant::factory()->create();
+        TenantContext::set($tenant->id);
+
+        $tecnico = User::factory()->forTenant($tenant)->withRole(Role::Tecnico)->create();
+
+        $policy = new ClientPolicy;
+
+        expect($policy->viewAny($tecnico))->toBeFalse();
     });
 
     it('[AC-004-05] Tecnico pode ver mas não criar/editar/excluir Instruments', function (): void {
@@ -301,17 +313,21 @@ describe('AC-004-05: políticas de autorização', function (): void {
             ->and($policy->delete($tecnico, $instrument))->toBeFalse();
     });
 
-    it('[AC-004-05] Apenas Gerente pode criar/editar Procedures', function (): void {
+    it('[AC-004-05] Apenas Gerente pode criar/editar Procedures; Tecnico pode listar', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
 
         $gerente = User::factory()->forTenant($tenant)->withRole(Role::Gerente)->create();
         $admin = User::factory()->forTenant($tenant)->withRole(Role::Administrativo)->create();
+        $tecnico = User::factory()->forTenant($tenant)->withRole(Role::Tecnico)->create();
         $procedure = Procedure::factory()->forTenant($tenant)->create();
 
         $policy = new ProcedurePolicy;
 
-        expect($policy->create($gerente))->toBeTrue()
+        expect($policy->viewAny($gerente))->toBeTrue()
+            ->and($policy->viewAny($admin))->toBeTrue()
+            ->and($policy->viewAny($tecnico))->toBeTrue()
+            ->and($policy->create($gerente))->toBeTrue()
             ->and($policy->update($gerente, $procedure))->toBeTrue()
             ->and($policy->create($admin))->toBeFalse()
             ->and($policy->update($admin, $procedure))->toBeFalse();
@@ -335,7 +351,7 @@ describe('AC-004-05: políticas de autorização', function (): void {
             ->and($policy->viewAny($gerente))->toBeTrue();
     });
 
-    it('[AC-004-05] Standard policy: Gerente gerencia, Tecnico só visualiza', function (): void {
+    it('[AC-004-05] Standard policy: Gerente gerencia, Tecnico pode listar/ver mas não modificar', function (): void {
         $tenant = Tenant::factory()->create();
         TenantContext::set($tenant->id);
 
@@ -345,7 +361,9 @@ describe('AC-004-05: políticas de autorização', function (): void {
 
         $policy = new StandardPolicy;
 
-        expect($policy->create($gerente))->toBeTrue()
+        expect($policy->viewAny($gerente))->toBeTrue()
+            ->and($policy->viewAny($tecnico))->toBeTrue()
+            ->and($policy->create($gerente))->toBeTrue()
             ->and($policy->delete($gerente, $standard))->toBeTrue()
             ->and($policy->create($tecnico))->toBeFalse()
             ->and($policy->delete($tecnico, $standard))->toBeFalse()
